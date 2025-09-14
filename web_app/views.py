@@ -19,7 +19,7 @@ from .serializers import (
     UserSerializer, ProfileSerializer, CategorySerializer,
     ProductSerializer, CartSerializer, OrderSerializer, OrderItemSerializer)
 from django.shortcuts import render, redirect
-from .forms import ProfileForm
+from .forms import ProfileForm, VendorProfileForm
 from .models import Profile, Order
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
@@ -27,6 +27,9 @@ from reportlab.lib.pagesizes import A4
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import CustomUser, Profile
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Sum
 
 
 # BASIC PAGES
@@ -430,27 +433,41 @@ def remove_from_cart(request, product_id):
 
 @login_required
 def profile_view(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
     if request.user.user_type == "vendor":
         products = Product.objects.filter(vendor=request.user)
         sales = OrderItem.objects.filter(product__vendor=request.user).select_related("order", "product")
 
-        # Annotate each sale with a total
         for s in sales:
             s.line_total = s.price * s.quantity
 
         return render(request, "vendor_profile.html", {
+            "profile": profile,
             "products": products,
             "sales": sales,
         })
-    else:
-        profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    else:  # customer
+        if request.method == "POST":
+            form = ProfileForm(request.POST, instance=profile)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Profile updated successfully!")
+                return redirect("profile")
+            else:
+                messages.error(request, "Please correct the errors below.")
+        else:
+            form = ProfileForm(instance=profile)
+
         orders = Order.objects.filter(user=request.user).order_by("-created_at")
-        form = ProfileForm(instance=profile)
+
         return render(request, "profile.html", {
             "form": form,
+            "profile": profile,
             "orders": orders,
         })
-    
+
 
 @login_required
 def profile_edit(request):
@@ -510,3 +527,191 @@ def invoice_view(request, order_id):
 def create_profile_for_new_user(sender, instance, created, **kwargs):
     if created:
         Profile.objects.get_or_create(user=instance)
+
+
+@login_required
+def download_report(request):
+    # Later you’ll generate a PDF/CSV here
+    return HttpResponse("Download report (to be implemented)", content_type="text/plain")
+
+
+@login_required
+def print_report(request):
+    # Later you’ll render a printable HTML report
+    return HttpResponse("Print report (to be implemented)", content_type="text/plain")
+
+
+@login_required
+def vendor_edit_profile(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        form = VendorProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect("profile")   # ✅ goes back to profile_view
+    else:
+        form = VendorProfileForm(
+            instance=profile,
+            initial={
+                "first_name": request.user.first_name,
+                "last_name": request.user.last_name,
+                "email": request.user.email,
+            }
+        )
+
+    return render(request, "vendor_edit_profile.html", {"form": form})
+
+
+@login_required
+def category_list(request):
+    categories = Category.objects.all()
+    return render(request, "category_list.html", {"categories": categories})
+
+
+@login_required
+def inventory_view(request):
+    products = Product.objects.filter(vendor=request.user)
+    return render(request, "inventory.html", {"products": products})
+
+
+@login_required
+def orders_view(request):
+    if request.user.user_type == "customer":
+        orders = Order.objects.filter(user=request.user)
+    else:  # vendor
+        orders = Order.objects.filter(orderitem__product__vendor=request.user).distinct()
+
+    return render(request, "orders.html", {"orders": orders})
+
+
+@login_required
+def customer_list(request):
+    # vendors can see their customers (from orders)
+    if request.user.user_type != "vendor":
+        messages.error(request, "You don’t have permission to view this page.")
+        return redirect("index")
+
+    customers = CustomUser.objects.filter(
+        orders__orderitem__product__vendor=request.user,
+        user_type="customer"
+    ).distinct()
+
+    return render(request, "customer_list.html", {"customers": customers})
+
+
+@login_required
+def reports_view(request):
+    return render(request, "reports.html")
+
+
+@login_required
+def vendor_profile_view(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    return render(request, "vendor_profile.html", {"profile": profile})
+
+
+@login_required
+def settings_view(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        form = VendorProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Settings updated successfully.")
+            return redirect("settings")  # stay on same page
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = VendorProfileForm(
+            instance=profile,
+            initial={
+                "first_name": request.user.first_name,
+                "last_name": request.user.last_name,
+                "email": request.user.email,
+            }
+        )
+
+    return render(request, "settings.html", {"form": form})
+
+
+@login_required
+def product_list(request):
+    products = Product.objects.filter(vendor=request.user)  # only vendor's products
+    return render(request, "vendor/product_list.html", {"products": products})
+
+
+@login_required
+def vendor_products(request):
+    if request.user.user_type != "vendor":
+        messages.error(request, "You don’t have permission to view this page.")
+        return redirect("index")
+
+    products = Product.objects.filter(vendor=request.user)
+    return render(request, "vendor/vendor_products.html", {"products": products})
+
+
+@login_required
+def sales_view(request):
+    if request.user.user_type != "vendor":
+        messages.error(request, "You don’t have permission to view this page.")
+        return redirect("index")
+
+    sales = (
+        OrderItem.objects.filter(product__vendor=request.user)
+        .select_related("order", "product")
+        .order_by("-order__created_at")
+    )
+
+    now = timezone.now()
+    today = now.date()
+    start_of_week = today - timedelta(days=today.weekday())  # Monday
+    start_of_month = today.replace(day=1)
+
+    # Totals
+    total_sales = 0
+    sales_today = 0
+    sales_week = 0
+    sales_month = 0
+
+    for item in sales:
+        item.subtotal = item.price * item.quantity
+        total_sales += item.subtotal
+
+        order_date = item.order.created_at.date()
+        if order_date == today:
+            sales_today += item.subtotal
+        if order_date >= start_of_week:
+            sales_week += item.subtotal
+        if order_date >= start_of_month:
+            sales_month += item.subtotal
+
+    # === Chart Data (Last 30 Days) ===
+    start_date = today - timedelta(days=29)
+    daily_sales = (
+        OrderItem.objects.filter(product__vendor=request.user, order__created_at__date__gte=start_date)
+        .values("order__created_at__date")
+        .annotate(total=Sum("price"))
+        .order_by("order__created_at__date")
+    )
+
+    # Prepare labels and values
+    labels = []
+    data = []
+    for i in range(30):
+        day = start_date + timedelta(days=i)
+        labels.append(day.strftime("%Y-%m-%d"))
+        day_sales = next((x["total"] for x in daily_sales if x["order__created_at__date"] == day), 0)
+        data.append(float(day_sales))
+
+    return render(request, "vendor/sales.html", {
+        "sales": sales,
+        "total_sales": total_sales,
+        "sales_today": sales_today,
+        "sales_week": sales_week,
+        "sales_month": sales_month,
+        "chart_labels": labels,
+        "chart_data": data,
+    })

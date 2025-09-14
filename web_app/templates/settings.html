@@ -1,0 +1,12 @@
+{% extends "base_vendor.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block vendor_content %}
+<h1 class="mb-4">Settings</h1>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-success">Save Settings</button>
+</form>
+{% endblock %}

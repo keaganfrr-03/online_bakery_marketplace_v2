@@ -1,10 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Edit Vendor Profile</h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <p>First Name: {{ form.first_name }}</p>
+    <p>Last Name: {{ form.last_name }}</p>
+    <p>Email: {{ form.email }}</p>
+    <p>Company Name: {{ form.company_name }}</p>
+    <p>Vendor ID: {{ form.vendor_id }}</p>
+    <p>Telephone: {{ form.phone }}</p>
+    <p>Mobile: {{ form.mobile }}</p>
+    <p>Address: {{ form.delivery_address }}</p>
+
+    <button type="submit" class="btn btn-success">Save Changes</button>
+  </form>
+
+{% endblock %}

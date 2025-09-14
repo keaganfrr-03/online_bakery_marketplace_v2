@@ -1,7 +1,10 @@
 .product-img {
-    width: 410px;
-    height: 350px;
-    object-fit: cover;  /* crop/scale without distortion */
-    margin: 0 auto;     /* center the image horizontally */
-    display: block;
+    width: 100%;              /* Stretches to fit card width */
+    height: 100px;            /* Fixed height for all images */
+    object-fit: cover;        /* Crops to fill the box without distortion */
+}
+
+
+.card {
+    height: 100%;
 }

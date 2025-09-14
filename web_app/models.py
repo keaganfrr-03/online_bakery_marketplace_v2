@@ -31,24 +31,32 @@ class CustomUser(AbstractUser):
 
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
     surname = models.CharField(max_length=100, blank=True)
+    company_name = models.CharField(max_length=150, blank=True)
+    vendor_id = models.CharField(max_length=50, unique=True, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True)
     mobile = models.CharField(max_length=20, blank=True)
     delivery_address = models.TextField(blank=True)
     payment_method = models.CharField(
         max_length=50,
-        choices=[("card", "Credit/Debit Card"), ("cash", "Cash on Delivery"), ("paypal", "PayPal")],
+        choices=[
+            ("card", "Credit/Debit Card"),
+            ("cash", "Cash on Delivery"),
+            ("paypal", "PayPal")
+        ],
         blank=True
     )
 
     def __str__(self):
-        return f"{self.user.username}'s Profile"
+        return f"{self.company_name} ({self.vendor_id})"
 
 
 # Products
 class Category(models.Model):
     name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
 
 
 class Product(models.Model):
@@ -61,6 +69,8 @@ class Product(models.Model):
     image = models.ImageField(upload_to='products/')
     vendor = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.name
 
 
 # Orders & Cart
@@ -71,7 +81,7 @@ class Cart(models.Model):
 
 
 class Order(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="orders")
     products = models.ManyToManyField(Product, through='OrderItem')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     delivery_address = models.TextField()

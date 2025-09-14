@@ -1,0 +1,23 @@
+{% extends "base_vendor.html" %}
+{% block title %}Inventory{% endblock %}
+
+{% block vendor_content %}
+<h1 class="mb-4">Inventory</h1>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Product</th>
+      <th>Stock</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for product in products %}
+    <tr>
+      <td>{{ product.name }}</td>
+      <td>{{ product.stock_quantity }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Nyarie's Market{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .main-wrapper {
+            display: flex;
+            flex: 1;
+        }
+        .sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            padding-top: 1rem;
+        }
+        .sidebar .nav-link {
+            color: #333;
+        }
+        .sidebar .nav-link.active {
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'index' %}">Nyarie's Market</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
+
+                    {% if user.is_authenticated %}
+                        {% if user.user_type == "customer" %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'cart' %}"><i class="bi bi-cart"></i> Cart</a></li>
+                        {% elif user.user_type == "vendor" %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'vendor_dash' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        {% endif %}
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile' %}">
+                                <i class="bi bi-person-circle"></i> Profile
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link nav-link text-danger" style="border:none; background:none;">
+                                    Logout
+                                </button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar + Main Content -->
+    <div class="main-wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <h6 class="px-3 mt-3 mb-2 text-muted text-uppercase small">Main</h6>
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link" href="{% url 'vendor_dash' %}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'product_list' %}"><i class="bi bi-box-seam me-2"></i> Product List</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'inventory' %}"><i class="bi bi-archive me-2"></i> Inventory</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'orders' %}"><i class="bi bi-cart-check me-2"></i> Orders</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'customer_list' %}"><i class="bi bi-people me-2"></i> Customer List</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'sales' %}"><i class="bi bi-cash-coin me-2"></i> Sales</a></li>
+            </ul>
+
+            <h6 class="px-3 mt-4 mb-2 text-muted text-uppercase small">Maintenance</h6>
+            <ul class="nav flex-column mb-2">
+                <li class="nav-item"><a class="nav-link" href="{% url 'reports' %}"><i class="bi bi-graph-up-arrow me-2"></i> Reports</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'vendor_profile' %}"><i class="bi bi-person-badge me-2"></i> Vendor Profile</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i> Settings</a></li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <main class="content-area">
+            {% block vendor_content %}{% endblock %}
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

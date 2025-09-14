@@ -1,0 +1,29 @@
+{% extends "base_vendor.html" %}
+{% block title %}Customer List{% endblock %}
+
+{% block vendor_content %}
+<h1 class="mb-4">Customers</h1>
+
+{% if customers %}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for customer in customers %}
+    <tr>
+      <td>{{ customer.name }}</td>
+      <td>{{ customer.email }}</td>
+      <td>{{ customer.phone }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No customers found.</p>
+{% endif %}
+{% endblock %}

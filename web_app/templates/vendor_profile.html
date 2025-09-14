@@ -1,76 +1,23 @@
-{% extends "base.html" %}
+{% extends "base_vendor.html" %}
 {% block title %}Vendor Profile{% endblock %}
 
-{% block content %}
-<div class="container mt-5">
-    <h2>Vendor Dashboard</h2>
-    <p>Welcome, {{ request.user.username }}!</p>
+{% block vendor_content %}
+<h1 class="mb-4">Vendor Profile</h1>
 
-    <hr>
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title">{{ request.user.username }}</h4>
+    <p><strong>Name:</strong> {{ request.user.first_name }} {{ request.user.last_name }}</p>
+    <p><strong>Company Name:</strong> {{ profile.company_name }}</p>
+    <p><strong>Vendor ID:</strong> {{ profile.vendor_id }}</p>
+    <p><strong>Email:</strong> {{ request.user.email }}</p>
+    <p><strong>Telephone:</strong> {{ profile.phone }}</p>
+    <p><strong>Mobile:</strong> {{ profile.mobile }}</p>
+    <p><strong>Address:</strong> {{ profile.delivery_address }}</p>
+  </div>
+</div>
 
-    <h3>My Products</h3>
-    <a href="{% url 'add_product' %}" class="btn btn-primary mb-3">+ Add New Product</a>
-    {% if products %}
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Price</th>
-                    <th>Stock</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                <tr>
-                    <td>{{ product.name }}</td>
-                    <td>R{{ product.price }}</td>
-                    <td>{{ product.stock_quantity }}</td>
-                    <td>
-                        <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>You have no products yet.</p>
-    {% endif %}
-
-    <hr>
-
-    {% load math_extras %}
-
-    <h3>Recent Sales</h3>
-    {% if sales %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Order #</th>
-                    <th>Date</th>
-                    <th>Customer</th>
-                    <th>Product</th>
-                    <th>Qty</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in sales %}
-                <tr>
-                    <td>{{ item.order.id }}</td>
-                    <td>{{ item.order.created_at|date:"Y-m-d H:i" }}</td>
-                    <td>{{ item.order.user.username }}</td>
-                    <td>{{ item.product.name }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>R{{ item.price|mul:item.quantity|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No sales yet.</p>
-    {% endif %}
-
+<div class="mt-3">
+  <a href="{% url 'vendor_edit_profile' %}" class="btn btn-primary">Edit Vendor Profile</a>
 </div>
 {% endblock %}

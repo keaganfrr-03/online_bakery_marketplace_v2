@@ -40,7 +40,7 @@ class Command(BaseCommand):
         customer_user.save()
 
         # === CATEGORIES ===
-        categories = ["Cakes", "Breads", "Pastries", "Cookies", "Donuts"]
+        categories = ["Cakes", "Breads", "Pastries", "Cookies", "Donuts", "Muffins"]
         category_objs = {}
         for name in categories:
             obj, _ = Category.objects.get_or_create(name=name)
@@ -82,6 +82,18 @@ class Command(BaseCommand):
             ("Strawberry Donut", "Fruity strawberry donut", "Donuts", 1.40, 20, "products/donuts/donut3.jpg"),
             ("Boston Cream Donut", "Filled with cream", "Donuts", 1.60, 18, "products/donuts/donut4.jpg"),
             ("Cinnamon Donut", "Coated with cinnamon sugar", "Donuts", 1.35, 22, "products/donuts/donut5.jpg"),
+
+            # Muffins
+            ("Blueberry Muffin", "Soft muffin with fresh blueberries", "Muffins", 2.50, 20,
+             "products/muffins/muffin1.jpg"),
+            ("Chocolate Chip Muffin", "Muffin loaded with chocolate chips", "Muffins", 2.75, 18,
+             "products/muffins/muffin2.jpg"),
+            ("Banana Nut Muffin", "Banana muffin with crunchy nuts", "Muffins", 2.60, 15,
+             "products/muffins/muffin3.jpg"),
+            ("Lemon Poppyseed Muffin", "Tangy lemon muffin with poppy seeds", "Muffins", 2.80, 12,
+             "products/muffins/muffin4.jpg"),
+            ("Cranberry Orange Muffin", "Sweet and tart cranberry orange muffin", "Muffins", 2.70, 10,
+             "products/muffins/muffin5.jpg"),
         ]
 
         product_objs = {}

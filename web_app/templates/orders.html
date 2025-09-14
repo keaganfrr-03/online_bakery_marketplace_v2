@@ -1,0 +1,33 @@
+{% extends "base_vendor.html" %}
+{% block title %}Orders{% endblock %}
+
+{% block vendor_content %}
+<h1 class="mb-4">Orders</h1>
+
+{% if orders %}
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Order ID</th>
+      <th>Customer</th>
+      <th>Date</th>
+      <th>Status</th>
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in orders %}
+    <tr>
+      <td>{{ order.id }}</td>
+      <td>{{ order.customer }}</td>
+      <td>{{ order.date }}</td>
+      <td>{{ order.status }}</td>
+      <td>R{{ order.total }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No orders found.</p>
+{% endif %}
+{% endblock %}

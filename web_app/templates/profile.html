@@ -4,6 +4,18 @@
 {% block content %}
 <div class="container mt-5">
     <h2>My Profile</h2>
+    <p class="text-muted">Manage your personal information and view past orders.</p>
+
+    <!-- Feedback messages -->
+    {% if messages %}
+    <div>
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Editable profile form -->
     <form method="post" class="mb-4">
@@ -30,7 +42,6 @@
                     <td>{{ order.id }}</td>
                     <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
                     <td>R{{ order.total_price }}</td>
-                    <!-- Now points to PDF invoice instead of order_confirmation -->
                     <td>
                         <a href="{% url 'invoice' order.id %}" class="btn btn-sm btn-secondary">
                             Download Invoice
