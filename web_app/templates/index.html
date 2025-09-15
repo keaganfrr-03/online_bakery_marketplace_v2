@@ -4,12 +4,12 @@
 {% block content %}
 <h1 class="text-center mb-4">Welcome to Nyarie's Market 🥖</h1>
 
-<div class="row row-cols-1 row-cols-md-3 g-4">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-4">
     {% for category in categories %}
     <div class="col">
         <a href="{% url 'category_detail' category.id %}" class="text-decoration-none text-dark">
             <div class="card h-100 shadow-sm text-center">
-                <img src="/media/products/{{ category.name|lower }}/{{ category.name|slice:":-1" }}1.jpg"
+                <img src="/media/products/{{ category.name|lower }}/{{ category.name|slice:":-1" }}.jpg"
                      class="card-img-top product-img"
                      alt="{{ category.name }}">
                 <div class="card-body">

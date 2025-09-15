@@ -40,7 +40,7 @@ class Command(BaseCommand):
         customer_user.save()
 
         # === CATEGORIES ===
-        categories = ["Cakes", "Breads", "Pastries", "Cookies", "Donuts", "Muffins"]
+        categories = ["Cakes", "Breads", "Pastries", "Cookies", "Donuts", "Muffins", "Pizza", "Buns", "Pies", "Cupcakes", "Brownies"]
         category_objs = {}
         for name in categories:
             obj, _ = Category.objects.get_or_create(name=name)
@@ -94,6 +94,61 @@ class Command(BaseCommand):
              "products/muffins/muffin4.jpg"),
             ("Cranberry Orange Muffin", "Sweet and tart cranberry orange muffin", "Muffins", 2.70, 10,
              "products/muffins/muffin5.jpg"),
+
+            # Pizza
+            ("Margherita Pizza Slice", "Classic pizza with tomato, mozzarella, and basil", "Pizza", 3.50, 15,
+             "products/pizza/pizza1.jpg"),
+            ("Pepperoni Pizza Slice", "Cheesy pizza topped with spicy pepperoni", "Pizza", 3.75, 12,
+             "products/pizza/pizza2.jpg"),
+            ("BBQ Chicken Pizza Slice", "Savory chicken with tangy BBQ sauce", "Pizza", 4.00, 10,
+             "products/pizza/pizza3.jpg"),
+            ("Veggie Delight Pizza Slice", "Loaded with fresh vegetables and mozzarella", "Pizza", 3.60, 14,
+             "products/pizza/pizza4.jpg"),
+            ("Four Cheese Pizza Slice", "Blend of mozzarella, cheddar, parmesan, and gouda", "Pizza", 4.20, 8,
+             "products/pizza/pizza5.jpg"),
+
+            # Buns
+            ("Sesame Bun", "Soft bun topped with sesame seeds", "Buns", 1.50, 25,
+             "products/buns/bun1.jpg"),
+            ("Garlic Knot", "Soft bread knot brushed with garlic butter", "Buns", 1.80, 20,
+             "products/buns/bun2.jpg"),
+            ("Cinnamon Bun", "Sweet bun with cinnamon swirl and icing glaze", "Buns", 2.20, 18,
+             "products/buns/bun3.jpg"),
+            ("Burger Bun", "Classic soft bun for burgers and sandwiches", "Buns", 1.40, 30,
+             "products/buns/bun4.jpg"),
+            ("Hot Dog Bun", "Fluffy bun perfect for hot dogs and sausages", "Buns", 1.30, 28,
+             "products/buns/bun5.jpg"),
+
+            # Pies
+            ("Apple Pie Slice", "Classic apple pie with cinnamon", "Pies", 3.50, 15, "products/pies/pie1.jpg"),
+            ("Cherry Pie Slice", "Sweet and tangy cherry filling", "Pies", 3.75, 12, "products/pies/pie2.jpg"),
+            ("Pumpkin Pie Slice", "Spiced pumpkin custard pie", "Pies", 3.60, 10, "products/pies/pie3.jpg"),
+            ("Pecan Pie Slice", "Sweet pecan filling with buttery crust", "Pies", 4.00, 8, "products/pies/pie4.jpg"),
+            ("Blueberry Pie Slice", "Fresh blueberry filling in flaky crust", "Pies", 3.80, 14,
+             "products/pies/pie5.jpg"),
+
+            # Cupcakes
+            ("Chocolate Cupcake", "Moist chocolate cupcake with frosting", "Cupcakes", 2.50, 20,
+             "products/cupcakes/cupcake1.jpg"),
+            ("Vanilla Cupcake", "Classic vanilla cupcake with buttercream", "Cupcakes", 2.40, 18,
+             "products/cupcakes/cupcake2.jpg"),
+            ("Red Velvet Cupcake", "Rich red velvet with cream cheese frosting", "Cupcakes", 2.70, 15,
+             "products/cupcakes/cupcake3.jpg"),
+            ("Strawberry Cupcake", "Fresh strawberry cupcake with pink icing", "Cupcakes", 2.60, 12,
+             "products/cupcakes/cupcake4.jpg"),
+            ("Cookies & Cream Cupcake", "Topped with crushed Oreos", "Cupcakes", 2.80, 10,
+             "products/cupcakes/cupcake5.jpg"),
+
+            # Brownies
+            ("Classic Brownie", "Rich chocolate fudge brownie", "Brownies", 2.00, 25, "products/brownies/brownie1.jpg"),
+            ("Walnut Brownie", "Brownie topped with crunchy walnuts", "Brownies", 2.20, 20,
+             "products/brownies/brownie2.jpg"),
+            ("Cheesecake Brownie", "Swirled cheesecake and chocolate brownie", "Brownies", 2.50, 18,
+             "products/brownies/brownie3.jpg"),
+            ("Peanut Butter Brownie", "Brownie layered with peanut butter", "Brownies", 2.40, 15,
+             "products/brownies/brownie4.jpg"),
+            ("Salted Caramel Brownie", "Chocolate brownie with caramel drizzle", "Brownies", 2.60, 12,
+             "products/brownies/brownie5.jpg"),
         ]
 
         product_objs = {}

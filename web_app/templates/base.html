@@ -20,15 +20,56 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <!-- ✅ Search form -->
+                    <form class="d-flex me-auto" action="{% url 'product_search' %}" method="get">
+                        <input class="form-control me-2" type="search" name="q" placeholder="Search products..." value="{{ request.GET.q }}">
+                        <button class="btn btn-outline-success" type="submit"><i class="bi bi-search"></i></button>
+                    </form>
+
+                    <ul class="navbar-nav ms-auto">
+                        <!-- your other menu items (Categories, Home, About, etc.) -->
+                    </ul>
+                </div>
+
+                <!-- ✅ Categories Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Menu Items
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
+                        {% for category in categories %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'category_detail' category.id %}">
+                                    {{ category.name }}
+                                </a>
+                            </li>
+                        {% empty %}
+                            <li><span class="dropdown-item text-muted">No categories available</span></li>
+                        {% endfor %}
+                    </ul>
+                </li>
+
+
+                <!-- Normal Nav Items -->
                 <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
 
                 {% if user.is_authenticated %}
                     {% if user.user_type == "customer" %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'cart' %}"><i class="bi bi-cart"></i> Cart</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'cart' %}">
+                                <i class="bi bi-cart"></i> Cart
+                            </a>
+                        </li>
                     {% elif user.user_type == "vendor" %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'vendor_dash' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'vendor_dash' %}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
                     {% endif %}
 
                     <li class="nav-item">
@@ -53,6 +94,7 @@
         </div>
     </div>
 </nav>
+
 
 <div class="container mt-4">
     {% block content %}{% endblock %}

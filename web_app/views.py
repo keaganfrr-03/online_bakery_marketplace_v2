@@ -8,28 +8,27 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from django.utils import timezone
-from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.forms import ModelForm
 from django.http import HttpResponseRedirect
-from .models import CustomUser, Profile, Category, Product, Cart, Order, OrderItem
+from .models import CustomUser, Profile, Category, Product, Cart, Order, OrderItem, VendorSettings
 from .serializers import (
     UserSerializer, ProfileSerializer, CategorySerializer,
     ProductSerializer, CartSerializer, OrderSerializer, OrderItemSerializer)
-from django.shortcuts import render, redirect
-from .forms import ProfileForm, VendorProfileForm
-from .models import Profile, Order
+from .forms import ProfileForm, VendorProfileForm, VendorSettingsForm
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import CustomUser, Profile
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Sum
+from django.db.models import Sum, Prefetch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
+import io
 
 
 # BASIC PAGES
@@ -185,7 +184,6 @@ def cart_view(request):
     })
 
 
-
 # ORDERS
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
@@ -238,31 +236,34 @@ def checkout_view(request):
             messages.error(request, "Please provide a delivery address.")
             return redirect("cart")
 
-        total_price = 0
+        # ✅ Create order with status instead of completed
         order = Order.objects.create(
             user=request.user,
             total_price=0,
             delivery_address=delivery_address,
             created_at=timezone.now(),
+            status="pending",
         )
 
+        total_price = 0
         for item in cart_items:
+            line_total = item.product.price * item.quantity
             OrderItem.objects.create(
                 order=order,
                 product=item.product,
                 quantity=item.quantity,
-                price=item.product.price,
+                price=item.product.price,  # snapshot price
             )
-            total_price += item.product.price * item.quantity
+            total_price += line_total
 
-            item.product.stock_quantity -= item.quantity
-            item.product.save()
-
+        # Finalize total
         order.total_price = total_price
         order.save()
+
+        # Clear cart
         cart_items.delete()
 
-        # Save to profile defaults
+        # Save defaults to profile
         profile, _ = Profile.objects.get_or_create(user=request.user)
         profile.delivery_address = delivery_address
         profile.payment_method = payment_method
@@ -273,7 +274,8 @@ def checkout_view(request):
     return redirect("cart")
 
 
-@login_required(login_url='/accounts/login/')
+
+@login_required
 def order_confirmation(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     order_items = OrderItem.objects.filter(order=order)
@@ -401,7 +403,7 @@ def edit_product(request, product_id):
         if form.is_valid():
             form.save()
             messages.success(request, "Product updated successfully.")
-            return redirect("vendor_dash")
+            return redirect("vendor_products")
     else:
         form = ProductForm(instance=product)
 
@@ -414,7 +416,7 @@ def delete_product(request, product_id):
     if request.method == "POST":
         product.delete()
         messages.success(request, "Product deleted successfully.")
-        return redirect("vendor_dash")
+        return redirect("vendor_products")
 
     return render(request, "confirm_delete.html", {"product": product})
 
@@ -438,11 +440,10 @@ def profile_view(request):
     if request.user.user_type == "vendor":
         products = Product.objects.filter(vendor=request.user)
         sales = OrderItem.objects.filter(product__vendor=request.user).select_related("order", "product")
-
         for s in sales:
             s.line_total = s.price * s.quantity
 
-        return render(request, "vendor_profile.html", {
+        return render(request, "vendor/vendor_profile.html", {
             "profile": profile,
             "products": products,
             "sales": sales,
@@ -450,7 +451,7 @@ def profile_view(request):
 
     else:  # customer
         if request.method == "POST":
-            form = ProfileForm(request.POST, instance=profile)
+            form = ProfileForm(request.POST, instance=profile, user=request.user)
             if form.is_valid():
                 form.save()
                 messages.success(request, "Profile updated successfully!")
@@ -458,7 +459,7 @@ def profile_view(request):
             else:
                 messages.error(request, "Please correct the errors below.")
         else:
-            form = ProfileForm(instance=profile)
+            form = ProfileForm(instance=profile, user=request.user)
 
         orders = Order.objects.filter(user=request.user).order_by("-created_at")
 
@@ -467,6 +468,7 @@ def profile_view(request):
             "profile": profile,
             "orders": orders,
         })
+
 
 
 @login_required
@@ -561,7 +563,7 @@ def vendor_edit_profile(request):
             }
         )
 
-    return render(request, "vendor_edit_profile.html", {"form": form})
+    return render(request, "vendor/vendor_edit_profile.html", {"form": form})
 
 
 @login_required
@@ -573,17 +575,78 @@ def category_list(request):
 @login_required
 def inventory_view(request):
     products = Product.objects.filter(vendor=request.user)
-    return render(request, "inventory.html", {"products": products})
+    return render(request, "vendor/inventory.html", {"products": products})
 
 
 @login_required
-def orders_view(request):
-    if request.user.user_type == "customer":
-        orders = Order.objects.filter(user=request.user)
-    else:  # vendor
-        orders = Order.objects.filter(orderitem__product__vendor=request.user).distinct()
+def customer_orders_view(request):
+    orders = Order.objects.filter(
+        user=request.user, status="pending"
+    ).order_by("-created_at")
+    return render(request, "customer_orders.html", {"orders": orders})
 
-    return render(request, "orders.html", {"orders": orders})
+
+@login_required
+def vendor_orders_view(request):
+    vendor = request.user
+
+    vendor_items_qs = OrderItem.objects.filter(product__vendor=vendor).select_related("product")
+
+    orders = (
+        Order.objects.filter(orderitem__product__vendor=vendor)
+        .prefetch_related(
+            Prefetch("orderitem_set", queryset=vendor_items_qs, to_attr="vendor_items_list")
+        )
+        .distinct()
+        .order_by("-created_at")
+    )
+
+    # attach vendor_subtotal manually
+    for order in orders:
+        order.vendor_subtotal = sum(item.subtotal for item in order.vendor_items_list)
+
+    return render(request, "vendor/vendor_orders.html", {"orders": orders})
+
+
+
+
+@login_required
+def order_history_view(request):
+    if request.user.user_type == "customer":
+        completed_orders = Order.objects.filter(
+            user=request.user,
+            status="paid"
+        ).order_by("-created_at")
+
+        cancelled_orders = Order.objects.filter(
+            user=request.user,
+            status="cancelled"
+        ).order_by("-created_at")
+
+        return render(request, "order_history.html", {
+            "completed_orders": completed_orders,
+            "cancelled_orders": cancelled_orders,
+        })
+
+    elif request.user.user_type == "vendor":
+        completed_orders = Order.objects.filter(
+            orderitem__product__vendor=request.user,
+            status="paid"
+        ).distinct().order_by("-created_at")
+
+        cancelled_orders = Order.objects.filter(
+            orderitem__product__vendor=request.user,
+            status="cancelled"
+        ).distinct().order_by("-created_at")
+
+        return render(request, "vendor/vendor_order_history.html", {
+            "completed_orders": completed_orders,
+            "cancelled_orders": cancelled_orders,
+        })
+
+    else:
+        messages.error(request, "You do not have permission to view this page.")
+        return redirect("index")
 
 
 @login_required
@@ -603,38 +666,72 @@ def customer_list(request):
 
 @login_required
 def reports_view(request):
-    return render(request, "reports.html")
+    if request.user.user_type != "vendor":
+        messages.error(request, "Only vendors can view reports.")
+        return redirect("index")
+
+    # default filter
+    period = request.GET.get("period", "all")
+    sales = OrderItem.objects.filter(product__vendor=request.user)
+
+    now = timezone.now()
+
+    if period == "day":
+        start_date = now - timedelta(days=1)
+        sales = sales.filter(order__created_at__gte=start_date)
+    elif period == "week":
+        start_date = now - timedelta(weeks=1)
+        sales = sales.filter(order__created_at__gte=start_date)
+    elif period == "month":
+        start_date = now - timedelta(days=30)
+        sales = sales.filter(order__created_at__gte=start_date)
+    # "all" just shows everything
+
+    total_sales = sum(item.price * item.quantity for item in sales)
+
+    return render(request, "vendor/reports.html", {
+        "sales": sales,
+        "total_sales": total_sales,
+        "period": period,
+    })
 
 
 @login_required
 def vendor_profile_view(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
-    return render(request, "vendor_profile.html", {"profile": profile})
+    return render(request, "vendor/vendor_profile.html", {"profile": profile})
 
 
 @login_required
 def settings_view(request):
-    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if request.user.user_type != "vendor":
+        messages.error(request, "Only vendors can access settings.")
+        return redirect("index")
+
+    settings_obj, _ = VendorSettings.objects.get_or_create(vendor=request.user)
 
     if request.method == "POST":
-        form = VendorProfileForm(request.POST, instance=profile)
+        form = VendorSettingsForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, "Settings updated successfully.")
-            return redirect("settings")  # stay on same page
-        else:
-            messages.error(request, "Please correct the errors below.")
+            data = form.cleaned_data
+            settings_obj.default_currency = data["default_currency"]
+            settings_obj.low_stock_threshold = data["low_stock_threshold"]
+            settings_obj.notify_new_order = data["notify_new_order"]
+            settings_obj.notify_low_stock = data["notify_low_stock"]
+            settings_obj.default_report_period = data["default_report_period"]
+            settings_obj.save()
+            messages.success(request, "Settings saved successfully.")
+            return redirect("settings")
     else:
-        form = VendorProfileForm(
-            instance=profile,
-            initial={
-                "first_name": request.user.first_name,
-                "last_name": request.user.last_name,
-                "email": request.user.email,
-            }
-        )
+        form = VendorSettingsForm(initial={
+            "default_currency": settings_obj.default_currency,
+            "low_stock_threshold": settings_obj.low_stock_threshold,
+            "notify_new_order": settings_obj.notify_new_order,
+            "notify_low_stock": settings_obj.notify_low_stock,
+            "default_report_period": settings_obj.default_report_period,
+        })
 
-    return render(request, "settings.html", {"form": form})
+    return render(request, "vendor/settings.html", {"form": form})
 
 
 @login_required
@@ -677,7 +774,6 @@ def sales_view(request):
     sales_month = 0
 
     for item in sales:
-        item.subtotal = item.price * item.quantity
         total_sales += item.subtotal
 
         order_date = item.order.created_at.date()
@@ -714,4 +810,308 @@ def sales_view(request):
         "sales_month": sales_month,
         "chart_labels": labels,
         "chart_data": data,
+    })
+
+
+def filter_sales_by_period(user, period):
+    sales = OrderItem.objects.filter(product__vendor=user)
+    now = timezone.now()
+
+    if period == "day":
+        sales = sales.filter(order__created_at__gte=now - timedelta(days=1))
+    elif period == "week":
+        sales = sales.filter(order__created_at__gte=now - timedelta(weeks=1))
+    elif period == "month":
+        sales = sales.filter(order__created_at__gte=now - timedelta(days=30))
+    # "all" = no filter
+
+    return sales
+
+
+@login_required
+def download_report(request):
+    if request.user.user_type != "vendor":
+        messages.error(request, "Only vendors can download reports.")
+        return redirect("index")
+
+    period = request.GET.get("period", "all")
+    sales = OrderItem.objects.filter(product__vendor=request.user)
+
+    now = timezone.now()
+    if period == "day":
+        sales = sales.filter(order__created_at__gte=now - timedelta(days=1))
+    elif period == "week":
+        sales = sales.filter(order__created_at__gte=now - timedelta(weeks=1))
+    elif period == "month":
+        sales = sales.filter(order__created_at__gte=now - timedelta(days=30))
+
+    total_sales = sum(item.price * item.quantity for item in sales)
+
+    # Create PDF in memory
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    # Title
+    elements.append(Paragraph(f"Sales Report ({period.title()})", styles["Title"]))
+    elements.append(Spacer(1, 12))
+
+    # Table data
+    data = [["Order ID", "Product", "Qty", "Unit Price", "Total", "Date"]]
+    for item in sales:
+        data.append([
+            str(item.order.id),
+            item.product.name,
+            str(item.quantity),
+            f"R{item.price:.2f}",
+            f"R{item.price * item.quantity:.2f}",
+            item.order.created_at.strftime("%Y-%m-%d %H:%M"),
+        ])
+
+    # Add total row
+    data.append(["", "", "", "Total Sales", f"R{total_sales:.2f}", ""])
+
+    table = Table(data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.grey),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.beige),
+        ("GRID", (0, 0), (-1, -1), 1, colors.black),
+    ]))
+
+    elements.append(table)
+
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+
+    response = HttpResponse(buffer, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="report_{period}.pdf"'
+    return response
+
+
+@login_required
+def print_report(request):
+    if request.user.user_type != "vendor":
+        messages.error(request, "Only vendors can print reports.")
+        return redirect("index")
+
+    period = request.GET.get("period", "all")
+    sales = OrderItem.objects.filter(product__vendor=request.user)
+
+    now = timezone.now()
+    if period == "day":
+        sales = sales.filter(order__created_at__gte=now - timedelta(days=1))
+    elif period == "week":
+        sales = sales.filter(order__created_at__gte=now - timedelta(weeks=1))
+    elif period == "month":
+        sales = sales.filter(order__created_at__gte=now - timedelta(days=30))
+
+    total_sales = sum(item.price * item.quantity for item in sales)
+
+    return render(request, "vendor/print_report.html", {
+        "sales": sales,
+        "total_sales": total_sales,
+        "period": period,
+    })
+
+
+@login_required
+def order_history_view(request):
+    if request.user.user_type == "customer":
+        # only paid (completed) orders for this customer
+        orders = Order.objects.filter(
+            user=request.user,
+            status="paid"
+        ).order_by("-created_at")
+    else:  # vendor
+        # paid (completed) orders that include this vendor's products
+        orders = Order.objects.filter(
+            orderitem__product__vendor=request.user,
+            status="paid"
+        ).distinct().order_by("-created_at")
+
+    return render(request, "order_history.html", {"orders": orders})
+
+
+def product_search(request):
+    query = request.GET.get("q", "").strip()
+    category_id = request.GET.get("category", "")
+
+    products = Product.objects.all()
+
+    if query:
+        products = products.filter(name__icontains=query)
+
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+    context = {
+        "products": products,
+        "query": query,
+        "category_id": category_id,
+        "categories": Category.objects.all(),
+    }
+    return render(request, "search_results.html", context)
+
+
+def product_detail(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    return render(request, "product_detail.html", {"product": product})
+
+
+@login_required
+def vendor_orders(request):
+    if request.user.user_type != "vendor":
+        messages.error(request, "Access denied.")
+        return redirect("index")
+
+    orders = Order.objects.filter(
+        orderitem__product__vendor=request.user,
+        status="pending"
+    ).distinct().order_by("-created_at")
+
+    return render(request, "vendor/vendor_orders.html", {"orders": orders})
+
+
+@login_required
+def update_order_status(request, order_id):
+    # Get the order (filter + first avoids MultipleObjectsReturned)
+    order = (
+        Order.objects.filter(id=order_id, orderitem__product__vendor=request.user)
+        .distinct()
+        .first()
+    )
+
+    if not order:
+        messages.error(request, "Order not found or not linked to your products.")
+        return redirect("vendor_orders")
+
+    if request.method == "POST":
+        new_status = request.POST.get("status")
+        if new_status in dict(Order.STATUS_CHOICES).keys():
+            order.status = new_status
+            order.save()
+
+            # only update this vendor’s items
+            if new_status == "paid":
+                vendor_items = order.orderitem_set.filter(product__vendor=request.user)
+                for item in vendor_items:
+                    item.product.stock_quantity -= item.quantity
+                    item.product.save()
+
+            messages.success(request, f"Order #{order.id} updated to {new_status}.")
+        else:
+            messages.error(request, "Invalid status update.")
+
+    return redirect("vendor_orders")
+
+
+
+@login_required
+def customer_orders(request):
+    orders = request.user.orders.filter(status="pending").order_by("-created_at")
+    return render(request, "customer_orders.html", {"orders": orders})
+
+
+@login_required
+def customer_order_history(request):
+    completed_orders = request.user.orders.filter(
+        status="paid"
+    ).order_by("-created_at")
+
+    cancelled_orders = request.user.orders.filter(
+        status="cancelled"
+    ).order_by("-created_at")
+
+    return render(request, "customer_order_history.html", {
+        "completed_orders": completed_orders,
+        "cancelled_orders": cancelled_orders,
+    })
+
+
+@login_required
+def update_order_status(request, order_id):
+    # Get the order (filter + first avoids MultipleObjectsReturned)
+    order = (
+        Order.objects.filter(id=order_id, orderitem__product__vendor=request.user)
+        .distinct()
+        .first()
+    )
+
+    if not order:
+        messages.error(request, "Order not found or not linked to your products.")
+        return redirect("vendor_orders")
+
+    if request.method == "POST":
+        new_status = request.POST.get("status")
+        if new_status in dict(Order.STATUS_CHOICES).keys():
+            order.status = new_status
+            order.save()
+
+            # only update this vendor’s items
+            if new_status == "paid":
+                vendor_items = order.orderitem_set.filter(product__vendor=request.user)
+                for item in vendor_items:
+                    item.product.stock_quantity -= item.quantity
+                    item.product.save()
+
+            messages.success(request, f"Order #{order.id} updated to {new_status}.")
+        else:
+            messages.error(request, "Invalid status update.")
+
+    return redirect("vendor_orders")
+
+
+@login_required
+def mark_order_paid(request, order_id):
+    if request.user.user_type != "vendor":
+        messages.error(request, "Only vendors can update orders.")
+        return redirect("orders")
+
+    order = get_object_or_404(Order, id=order_id)
+
+    # make sure this order has at least one product from this vendor
+    if not order.orderitem_set.filter(product__vendor=request.user).exists():
+        messages.error(request, "You cannot update this order.")
+        return redirect("orders")
+
+    # mark order as paid
+    order.status = "paid"
+    order.save()
+
+    # update vendor's inventory and sales
+    for item in order.orderitem_set.filter(product__vendor=request.user):
+        product = item.product
+        product.stock_quantity -= item.quantity
+        product.save()
+        # (optional: add sales tracking model if you want)
+
+    messages.success(request, f"Order #{order.id} marked as Paid.")
+    return redirect("orders")
+
+
+@login_required
+def vendor_order_history(request):
+    if request.user.user_type != "vendor":
+        messages.error(request, "You do not have permission to view this page.")
+        return redirect("index")
+
+    # Get only PAID + CANCELLED orders that belong to this vendor
+    orders = (
+        Order.objects.filter(
+            orderitem__product__vendor=request.user,
+            status__in=["paid", "cancelled"]
+        )
+        .distinct()
+        .order_by("-created_at")
+    )
+
+    return render(request, "vendor/vendor_order_history.html", {
+        "orders": orders,
     })

@@ -4,8 +4,9 @@ from web_app.views import (
     index, category_detail, CustomLoginView, add_to_cart, cart_view, remove_from_cart, checkout_view,
     order_confirmation, register_view, vendor_dash, add_product, edit_product, delete_product, profile_view,
     profile_edit, invoice_view, download_report, print_report, vendor_edit_profile, category_list, inventory_view,
-    settings_view, vendor_profile_view, reports_view, customer_list, orders_view, product_list, vendor_products,
-    sales_view)
+    settings_view, vendor_profile_view, reports_view, customer_list, product_list, vendor_products,
+    sales_view, order_history_view, product_search, product_detail, mark_order_paid, customer_orders_view,
+    vendor_orders_view, update_order_status, vendor_order_history, customer_order_history)
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import render
@@ -51,7 +52,10 @@ urlpatterns = [
     # Side panel
     path("categories/", category_list, name="category_list"),
     path("inventory/", inventory_view, name="inventory"),
-    path("orders/", orders_view, name="orders"),
+    # Orders
+    path("customer/orders", customer_orders_view, name="customer_orders"),
+    path("vendor/orders", vendor_orders_view, name="vendor_orders"),
+
     path("customers/", customer_list, name="customer_list"),
     path("reports/", reports_view, name="reports"),
     path("vendor/profile/", vendor_profile_view, name="vendor_profile"),
@@ -59,6 +63,15 @@ urlpatterns = [
     path("products/", product_list, name="product_list"),
     path("vendor/products/", vendor_products, name="vendor_products"),
     path("vendor/sales/", sales_view, name="sales"),
+
+    path("search/", product_search, name="product_search"),
+    path("product/<int:product_id>/", product_detail, name="product_detail"),
+    path("orders/<int:order_id>/mark_paid/", mark_order_paid, name="mark_order_paid"),
+    path("orders/<int:order_id>/update/", update_order_status, name="update_order_status"),
+    path("vendor/orders/history/", vendor_order_history, name="vendor_order_history"),
+    path("order_history/", customer_order_history, name="customer_order_history"),
+    path("accounts/profile/invoice/<int:order_id>/", invoice_view, name="invoice"),
+
 ]
 
 if settings.DEBUG:

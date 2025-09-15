@@ -26,7 +26,7 @@
                     <td>{{ item.product.name }}</td>
                     <td>{{ item.quantity }}</td>
                     <td>R{{ item.price|floatformat:2 }}</td>
-                    <td>R{{ item.price|floatformat:2|add:"0"|floatformat:2 }}</td>
+                    <td>R{{ item.subtotal|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
                 <tr class="fw-bold">

@@ -1,33 +1,38 @@
-{% extends "base_vendor.html" %}
-{% block title %}Orders{% endblock %}
-
-{% block vendor_content %}
-<h1 class="mb-4">Orders</h1>
+{% extends "base_sidebar.html" %}
+{% block content %}
+<h2>Pending Orders</h2>
 
 {% if orders %}
-<table class="table table-bordered table-striped">
-  <thead>
-    <tr>
-      <th>Order ID</th>
-      <th>Customer</th>
-      <th>Date</th>
-      <th>Status</th>
-      <th>Total</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for order in orders %}
-    <tr>
-      <td>{{ order.id }}</td>
-      <td>{{ order.customer }}</td>
-      <td>{{ order.date }}</td>
-      <td>{{ order.status }}</td>
-      <td>R{{ order.total }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Order #</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Delivery Address</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.user.username }}</td>
+            <td>R{{ order.total_price }}</td>
+            <td>{{ order.delivery_address }}</td>
+            <td><span class="badge bg-warning">Pending</span></td>
+            <td>
+                <form action="{% url 'mark_order_paid' order.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-sm">Mark as Paid</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
 </table>
 {% else %}
-<p>No orders found.</p>
+<p class="text-muted">No pending orders.</p>
 {% endif %}
 {% endblock %}

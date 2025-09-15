@@ -1,10 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base_vendor.html" %}
+{% block title %}Vendor Orders{% endblock %}
+
+{% block vendor_content %}
+<h2 class="mb-4">Customer Orders</h2>
+
+{% if orders %}
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Items (Your Products Only)</th>
+                <th>Your Subtotal</th>
+                <th>Global Total</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.user.username }}</td>
+                    <td>
+                        <ul class="list-unstyled mb-0">
+                            {% for item in order.vendor_items_list %}
+                                <li>{{ item.product.name }} (x{{ item.quantity }}) - R{{ item.subtotal }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>R{{ order.vendor_subtotal }}</td>
+                    <td>R{{ order.global_total }}</td>
+
+                    <td>R{{ order.vendor_subtotal }}</td>
+                    <td>R{{ order.global_total }}</td>
+                    <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <span class="badge
+                            {% if order.status == 'paid' %} bg-success
+                            {% elif order.status == 'pending' %} bg-warning text-dark
+                            {% else %} bg-danger {% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <form method="post" action="{% url 'update_order_status' order.id %}">
+                            {% csrf_token %}
+                            <select name="status" class="form-select form-select-sm">
+                                <option value="pending" {% if order.status == "pending" %}selected{% endif %}>Pending</option>
+                                <option value="paid" {% if order.status == "paid" %}selected{% endif %}>Paid</option>
+                                <option value="cancelled" {% if order.status == "cancelled" %}selected{% endif %}>Cancelled</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-primary mt-1">Update</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p class="text-muted">No orders found.</p>
+{% endif %}
+{% endblock %}

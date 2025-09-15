@@ -81,11 +81,28 @@ class Cart(models.Model):
 
 
 class Order(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("paid", "Paid"),
+        ("cancelled", "Cancelled"),
+    ]
+
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="orders")
     products = models.ManyToManyField(Product, through='OrderItem')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     delivery_address = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+
+    def vendor_items(self, vendor):
+        return self.orderitem_set.filter(product__vendor=vendor)
+
+    def vendor_subtotal(self, vendor):
+        return sum(item.subtotal for item in self.vendor_items(vendor))
+
+    @property
+    def global_total(self):
+        return sum(item.subtotal for item in self.orderitem_set.all())
 
 
 class OrderItem(models.Model):
@@ -94,4 +111,18 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    @property
+    def subtotal(self):
+        return self.quantity * self.price
 
+
+class VendorSettings(models.Model):
+    vendor = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    default_currency = models.CharField(max_length=3, default="R")
+    low_stock_threshold = models.IntegerField(default=5)
+    notify_new_order = models.BooleanField(default=True)
+    notify_low_stock = models.BooleanField(default=True)
+    default_report_period = models.CharField(max_length=10, default="week")
+
+    def __str__(self):
+        return f"Settings for {self.vendor.username}"

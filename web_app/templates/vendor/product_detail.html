@@ -1,10 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>{{ product.name }}</h1>
+    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid mb-3" style="max-width:300px;">
+    <p><strong>Price:</strong> R{{ product.price }}</p>
+    <p>{{ product.description }}</p>
+    <p><strong>Stock:</strong> {{ product.stock_quantity }}</p>
+</div>
+{% endblock %}
