@@ -13,31 +13,45 @@ class Command(BaseCommand):
         self.stdout.write("🌱 Seeding database...")
 
         # === USERS ===
-        admin_user, _ = User.objects.get_or_create(
-            username="admin_user",
+        eddie, _ = User.objects.get_or_create(
+            username="eddie",
             defaults={
-                "email": "admin@example.com",
-                "user_type": "vendor",  # admin acting as vendor for now
+                "email": "eddie@ecns.co.za",
+                "user_type": "admin",
                 "is_staff": True,
                 "is_superuser": True,
             },
         )
-        admin_user.set_password("adminpass")
-        admin_user.save()
+        eddie.set_password("adminpass")
+        eddie.save()
 
-        vendor_user, _ = User.objects.get_or_create(
-            username="vendor_user",
-            defaults={"email": "vendor@example.com", "user_type": "vendor"},
+        vendor1, _ = User.objects.get_or_create(
+            username="vendor1",
+            defaults={"email": "vendor1@bakeries.co.za", "user_type": "vendor"},
         )
-        vendor_user.set_password("vendorpass")
-        vendor_user.save()
+        vendor1.set_password("vendorpass")
+        vendor1.save()
 
-        customer_user, _ = User.objects.get_or_create(
-            username="customer_user",
-            defaults={"email": "customer@example.com", "user_type": "customer"},
+        vendor2, _ = User.objects.get_or_create(
+            username="vendor2",
+            defaults={"email": "vendor2@bakers.co.za", "user_type": "vendor"},
         )
-        customer_user.set_password("customerpass")
-        customer_user.save()
+        vendor2.set_password("vendorpass")
+        vendor2.save()
+
+        customer1, _ = User.objects.get_or_create(
+            username="customer1",
+            defaults={"email": "customer1@gmail.co.za", "user_type": "customer"},
+        )
+        customer1.set_password("customerpass")
+        customer1.save()
+
+        customer2, _ = User.objects.get_or_create(
+            username="customer2",
+            defaults={"email": "customer2@yahoo.co.za", "user_type": "customer"},
+        )
+        customer2.set_password("customerpass")
+        customer2.save()
 
         # === CATEGORIES ===
         categories = ["Cakes", "Breads", "Pastries", "Cookies", "Donuts", "Muffins", "Pizza", "Buns", "Pies", "Cupcakes", "Brownies"]
@@ -155,7 +169,7 @@ class Command(BaseCommand):
         for name, desc, cat_name, price, stock, image in products_data:
             prod, _ = Product.objects.get_or_create(
                 name=name,
-                vendor=vendor_user,
+                vendor=vendor1,
                 category=category_objs[cat_name],
                 defaults={
                     "description": desc,
@@ -168,12 +182,12 @@ class Command(BaseCommand):
             product_objs[name] = prod
 
         # === CART ===
-        Cart.objects.get_or_create(user=customer_user, product=product_objs["Chocolate Cake"], defaults={"quantity": 2})
-        Cart.objects.get_or_create(user=customer_user, product=product_objs["Glazed Donut"], defaults={"quantity": 4})
+        Cart.objects.get_or_create(user=customer1, product=product_objs["Chocolate Cake"], defaults={"quantity": 2})
+        Cart.objects.get_or_create(user=customer1, product=product_objs["Glazed Donut"], defaults={"quantity": 4})
 
         # === ORDERS ===
         order1, _ = Order.objects.get_or_create(
-            user=customer_user,
+            user=customer1,
             defaults={
                 "total_price": 45.00,
                 "delivery_address": "123 Customer Lane",

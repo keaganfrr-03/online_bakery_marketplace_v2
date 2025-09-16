@@ -23,7 +23,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Sum, Prefetch
+from django.db.models import Sum, Prefetch, F, DecimalField, ExpressionWrapper
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -418,7 +418,7 @@ def delete_product(request, product_id):
         messages.success(request, "Product deleted successfully.")
         return redirect("vendor_products")
 
-    return render(request, "confirm_delete.html", {"product": product})
+    return render(request, "vendor/confirm_delete.html", {"product": product})
 
 
 @require_POST
@@ -590,10 +590,13 @@ def customer_orders_view(request):
 def vendor_orders_view(request):
     vendor = request.user
 
-    vendor_items_qs = OrderItem.objects.filter(product__vendor=vendor).select_related("product")
+    vendor_items_qs = (
+        OrderItem.objects.filter(product__vendor=vendor)
+        .select_related("product")
+    )
 
     orders = (
-        Order.objects.filter(orderitem__product__vendor=vendor)
+        Order.objects.filter(orderitem__product__vendor=vendor, status="pending")  # ✅ only pending
         .prefetch_related(
             Prefetch("orderitem_set", queryset=vendor_items_qs, to_attr="vendor_items_list")
         )
@@ -606,6 +609,7 @@ def vendor_orders_view(request):
         order.vendor_subtotal = sum(item.subtotal for item in order.vendor_items_list)
 
     return render(request, "vendor/vendor_orders.html", {"orders": orders})
+
 
 
 
@@ -663,7 +667,6 @@ def customer_list(request):
 
     return render(request, "customer_list.html", {"customers": customers})
 
-
 @login_required
 def reports_view(request):
     if request.user.user_type != "vendor":
@@ -672,7 +675,12 @@ def reports_view(request):
 
     # default filter
     period = request.GET.get("period", "all")
-    sales = OrderItem.objects.filter(product__vendor=request.user)
+
+    # only PAID sales
+    sales = OrderItem.objects.filter(
+        product__vendor=request.user,
+        order__status="paid"
+    )
 
     now = timezone.now()
 
@@ -685,9 +693,12 @@ def reports_view(request):
     elif period == "month":
         start_date = now - timedelta(days=30)
         sales = sales.filter(order__created_at__gte=start_date)
-    # "all" just shows everything
+    # "all" → no date filter
 
-    total_sales = sum(item.price * item.quantity for item in sales)
+    # Calculate the vendor's total sales correctly
+    total_sales = sales.aggregate(
+        total=Sum(F("price") * F("quantity"), output_field=DecimalField())
+    )["total"] or 0
 
     return render(request, "vendor/reports.html", {
         "sales": sales,
@@ -1102,15 +1113,29 @@ def vendor_order_history(request):
         messages.error(request, "You do not have permission to view this page.")
         return redirect("index")
 
-    # Get only PAID + CANCELLED orders that belong to this vendor
+    vendor = request.user
+
+    # prefetch only this vendor's items
+    vendor_items_qs = (
+        OrderItem.objects.filter(product__vendor=vendor)
+        .select_related("product")
+    )
+
     orders = (
         Order.objects.filter(
-            orderitem__product__vendor=request.user,
+            orderitem__product__vendor=vendor,
             status__in=["paid", "cancelled"]
+        )
+        .prefetch_related(
+            Prefetch("orderitem_set", queryset=vendor_items_qs, to_attr="vendor_items_list")
         )
         .distinct()
         .order_by("-created_at")
     )
+
+    # add vendor-specific subtotal
+    for order in orders:
+        order.vendor_subtotal = sum(item.subtotal for item in order.vendor_items_list)
 
     return render(request, "vendor/vendor_order_history.html", {
         "orders": orders,

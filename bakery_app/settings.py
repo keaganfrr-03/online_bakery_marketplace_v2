@@ -80,19 +80,19 @@ WSGI_APPLICATION = 'bakery_app.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {  # Django models for users, orders, etc.
-        'ENGINE': 'django.db.backends.sqlite3',  # keep default for auth/orders
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    },
-    'products_db': {  # External MySQL for products
+    'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT', cast=int),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
     }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

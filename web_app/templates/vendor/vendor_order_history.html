@@ -2,38 +2,49 @@
 {% block title %}Order History{% endblock %}
 
 {% block vendor_content %}
-<h2>Order History</h2>
+<h2 class="mb-4">Order History</h2>
 <p class="text-muted">Paid and Cancelled Orders</p>
 
 {% if orders %}
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Order #</th>
-            <th>Customer</th>
-            <th>Status</th>
-            <th>Total Price</th>
-            <th>Date</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for order in orders %}
-        <tr>
-            <td>{{ order.id }}</td>
-            <td>{{ order.user.username }}</td>
-            <td>
-                {% if order.status == "paid" %}
-                    <span class="badge bg-success">Paid</span>
-                {% elif order.status == "cancelled" %}
-                    <span class="badge bg-danger">Cancelled</span>
-                {% endif %}
-            </td>
-            <td>R{{ order.total_price }}</td>
-            <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Items (Your Products Only)</th>
+                <th>Your Subtotal</th>
+                <th>Global Total</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.user.username }}</td>
+                    <td>
+                        <ul class="list-unstyled mb-0">
+                            {% for item in order.vendor_items_list %}
+                                <li>{{ item.product.name }} (x{{ item.quantity }}) - R{{ item.subtotal }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>R{{ order.vendor_subtotal }}</td>
+                    <td>R{{ order.total_price }}</td>
+                    <td>
+                        <span class="badge
+                            {% if order.status == 'paid' %} bg-success
+                            {% elif order.status == 'cancelled' %} bg-danger
+                            {% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% else %}
     <p class="text-muted">No past orders found.</p>
 {% endif %}

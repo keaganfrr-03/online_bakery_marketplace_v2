@@ -1,40 +1,45 @@
 from django.core.management.base import BaseCommand
-from web_app.models import Product, Order, CustomUser
+from web_app.models import Product, CustomUser
 from django.db import transaction
+import random
 
 
 class Command(BaseCommand):
-    help = "Reassign all products to vendor1 and all orders to customer1, then delete other users."
+    help = "Transfer half of vendor1's products to vendor2."
 
     def handle(self, *args, **kwargs):
         try:
             with transaction.atomic():
-                # Get main vendor and main customer
-                vendor1 = CustomUser.objects.filter(user_type="vendor").first()
-                customer1 = CustomUser.objects.filter(user_type="customer").first()
-
-                if not vendor1:
-                    self.stdout.write(self.style.ERROR("❌ No vendor found (user_type='vendor')."))
+                # Get two vendors (adjust query if needed)
+                vendors = list(CustomUser.objects.filter(user_type="vendor")[:2])
+                if len(vendors) < 2:
+                    self.stdout.write(self.style.ERROR("❌ Need at least 2 vendors."))
                     return
 
-                if not customer1:
-                    self.stdout.write(self.style.ERROR("❌ No customer found (user_type='customer')."))
+                vendor1, vendor2 = vendors
+
+                # Get vendor1's products
+                products = list(Product.objects.filter(vendor=vendor1))
+                if not products:
+                    self.stdout.write(self.style.WARNING(f"⚠️ No products found for {vendor1.username}"))
                     return
 
-                # Reassign all products
-                Product.objects.all().update(vendor=vendor1)
-                self.stdout.write(self.style.SUCCESS("✅ All products reassigned to Vendor1."))
+                # Shuffle and split
+                random.shuffle(products)
+                half = len(products) // 2
+                products_to_transfer = products[:half]
 
-                # Reassign all orders
-                Order.objects.all().update(user=customer1)
-                self.stdout.write(self.style.SUCCESS("✅ All orders reassigned to Customer1."))
+                # Transfer half to vendor2
+                for p in products_to_transfer:
+                    p.vendor = vendor2
+                    p.save()
 
-                # Delete other vendors & customers
-                CustomUser.objects.filter(user_type="vendor").exclude(id=vendor1.id).delete()
-                CustomUser.objects.filter(user_type="customer").exclude(id=customer1.id).delete()
-                self.stdout.write(self.style.SUCCESS("🧹 Removed other vendors and customers."))
-
-                self.stdout.write(self.style.SUCCESS("🎉 Cleanup completed successfully."))
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"✅ Transferred {len(products_to_transfer)} products "
+                        f"from {vendor1.username} → {vendor2.username}."
+                    )
+                )
 
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"⚠️ Error: {str(e)}"))
