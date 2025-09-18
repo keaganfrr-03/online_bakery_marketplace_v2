@@ -1,3 +1,6 @@
+import stripe
+from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -11,7 +14,9 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.forms import ModelForm
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
+
+from bakery_app.settings import MIN_ORDER_AMOUNT_ZAR
 from .models import CustomUser, Profile, Category, Product, Cart, Order, OrderItem, VendorSettings
 from .serializers import (
     UserSerializer, ProfileSerializer, CategorySerializer,
@@ -223,55 +228,80 @@ class OrderViewSet(viewsets.ModelViewSet):
 
 @login_required(login_url='/accounts/login/')
 def checkout_view(request):
-    if request.method == "POST":
-        delivery_address = request.POST.get("delivery_address", "").strip()
-        payment_method = request.POST.get("payment_method", "").strip()
-        cart_items = Cart.objects.filter(user=request.user)
+    if request.method != "POST":
+        return redirect("cart")
 
-        if not cart_items.exists():
-            messages.error(request, "Your cart is empty.")
-            return redirect("cart")
+    delivery_address = request.POST.get("delivery_address", "").strip()
+    payment_method = request.POST.get("payment_method", "").strip()
+    cart_items = Cart.objects.filter(user=request.user)
 
-        if not delivery_address:
-            messages.error(request, "Please provide a delivery address.")
-            return redirect("cart")
+    if not cart_items.exists():
+        messages.error(request, "Your cart is empty.")
+        return redirect("cart")
 
-        # ✅ Create order with status instead of completed
-        order = Order.objects.create(
-            user=request.user,
-            total_price=0,
-            delivery_address=delivery_address,
-            created_at=timezone.now(),
-            status="pending",
+    if not delivery_address:
+        messages.error(request, "Please provide a delivery address.")
+        return redirect("cart")
+
+    # Calculate total and prepare order items
+    total_price = Decimal(0)
+    line_items = []
+
+    for item in cart_items:
+        line_total = item.product.price * item.quantity
+        total_price += line_total
+        line_items.append({
+            "price_data": {
+                "currency": "zar",  # Always ZAR
+                "product_data": {"name": item.product.name},
+                "unit_amount": int(item.product.price * 100),  # convert R to cents
+            },
+            "quantity": item.quantity,
+        })
+
+    if total_price < MIN_ORDER_AMOUNT_ZAR:
+        messages.error(request, f"Minimum order amount for card payments is R{MIN_ORDER_AMOUNT_ZAR:.2f}")
+        return redirect("cart")
+
+    # Create order in pending state
+    order = Order.objects.create(
+        user=request.user,
+        total_price=total_price,
+        delivery_address=delivery_address,
+        status="pending",
+    )
+
+    for item in cart_items:
+        OrderItem.objects.create(
+            order=order,
+            product=item.product,
+            quantity=item.quantity,
+            price=item.product.price,
         )
 
-        total_price = 0
-        for item in cart_items:
-            line_total = item.product.price * item.quantity
-            OrderItem.objects.create(
-                order=order,
-                product=item.product,
-                quantity=item.quantity,
-                price=item.product.price,  # snapshot price
+    cart_items.delete()
+
+    # Handle payment methods
+    if payment_method == "card":
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=["card"],
+                line_items=line_items,
+                mode="payment",
+                success_url=request.build_absolute_uri(reverse("success", args=[order.id])),
+                cancel_url=request.build_absolute_uri(reverse("cancel", args=[order.id])),
+                metadata={"order_id": str(order.id)},
             )
-            total_price += line_total
+            return redirect(session.url, code=303)
+        except stripe.error.InvalidRequestError as e:
+            messages.error(request, f"Stripe error: {e.user_message or str(e)}")
+            order.status = "cancelled"
+            order.save()
+            return redirect("cart")
 
-        # Finalize total
-        order.total_price = total_price
-        order.save()
-
-        # Clear cart
-        cart_items.delete()
-
-        # Save defaults to profile
-        profile, _ = Profile.objects.get_or_create(user=request.user)
-        profile.delivery_address = delivery_address
-        profile.payment_method = payment_method
-        profile.save()
-
-        return redirect("order_confirmation", order_id=order.id)
-
-    return redirect("cart")
+    else:
+        # For PayPal or COD, show a placeholder notice page
+        return render(request, "payment_pending.html", {"order": order, "payment_method": payment_method})
 
 
 
@@ -1140,3 +1170,116 @@ def vendor_order_history(request):
     return render(request, "vendor/vendor_order_history.html", {
         "orders": orders,
     })
+
+@csrf_exempt
+def create_checkout_session(request):
+    if request.method == "POST":
+        # Get the current user's cart
+        cart_items = Cart.objects.filter(user=request.user)
+        if not cart_items.exists():
+            return redirect("cart")  # or show a message
+
+        # ✅ Create a pending order
+        order = Order.objects.create(
+            user=request.user,
+            total_price=0,
+            status="pending",
+        )
+
+        line_items = []
+        total_price = 0
+        for item in cart_items:
+            line_total = item.product.price * item.quantity
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price,
+            )
+            total_price += line_total
+
+            # Stripe line items
+            line_items.append({
+                "price_data": {
+                    "currency": "zar",
+                    "product_data": {"name": item.product.name},
+                    "unit_amount": int(item.product.price * 100),
+                },
+                "quantity": item.quantity,
+            })
+
+        order.total_price = total_price
+        order.save()
+        cart_items.delete()
+
+        # ✅ Create Stripe Checkout session
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=request.build_absolute_uri(
+                reverse("success", args=[order.id])
+            ),
+            cancel_url=request.build_absolute_uri(
+                reverse("cancel", args=[order.id])
+            ),
+            metadata={"order_id": str(order.id)},
+        )
+
+        return redirect(session.url, code=303)
+
+    return redirect("cart")
+
+
+@login_required
+def success(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order.status = "paid"
+    order.save()
+
+    # Fetch the related order items
+    order_items = order.orderitem_set.all()  # or use related_name if you set one
+
+    return render(request, "success.html", {"order": order, "order_items": order_items})
+
+
+@login_required
+def cancel(request, order_id):
+    order = Order.objects.get(id=order_id, user=request.user)
+    order.status = "cancelled"
+    order.save()
+
+    order_items = order.orderitem_set.all()
+
+    return render(request, "cancel.html", {"order": order, "order_items": order_items})
+
+
+def customer_dashboard(request):
+    orders = request.user.orders.all() if request.user.is_authenticated else []
+    return render(request, "customer_order_history.html", {"orders": orders})
+
+
+@csrf_exempt
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
+    endpoint_secret = "whsec_..."  # from Stripe dashboard
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, endpoint_secret
+        )
+    except stripe.error.SignatureVerificationError:
+        return HttpResponse(status=400)
+
+    # ✅ Handle event
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        order_id = session["metadata"]["order_id"]
+
+        order = Order.objects.get(id=order_id)
+        order.status = "paid"
+        order.save()
+
+    return HttpResponse(status=200)

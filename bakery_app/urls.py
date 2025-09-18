@@ -6,7 +6,8 @@ from web_app.views import (
     profile_edit, invoice_view, download_report, print_report, vendor_edit_profile, category_list, inventory_view,
     settings_view, vendor_profile_view, reports_view, customer_list, product_list, vendor_products,
     sales_view, order_history_view, product_search, product_detail, mark_order_paid, customer_orders_view,
-    vendor_orders_view, update_order_status, vendor_order_history, customer_order_history)
+    vendor_orders_view, update_order_status, vendor_order_history, customer_order_history, create_checkout_session,
+    success, cancel, customer_dashboard, stripe_webhook)
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import render
@@ -71,6 +72,11 @@ urlpatterns = [
     path("vendor/orders/history/", vendor_order_history, name="vendor_order_history"),
     path("order_history/", customer_order_history, name="customer_order_history"),
     path("accounts/profile/invoice/<int:order_id>/", invoice_view, name="invoice"),
+    path('create-checkout-session/', create_checkout_session, name='checkout'),
+    path("success/<int:order_id>/", success, name="success"),
+    path("cancel/<int:order_id>/", cancel, name="cancel"),
+    path("customer_dashboard/", customer_dashboard, name="customer_dashboard"),
+    path("stripe/webhook/", stripe_webhook, name="stripe_webhook"),
 
 ]
 
