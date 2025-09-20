@@ -11,10 +11,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-
 import stripe
 from decouple import config
 import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -120,12 +120,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
+TIME_ZONE = 'Africa/Johannesburg'
 USE_TZ = True
 
+USE_I18N = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -147,12 +145,12 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_REDIRECT_URL = "/cart/"
 LOGOUT_REDIRECT_URL = "/"
 
-STRIPE_SECRET_KEY = "sk_test_51S7b4m4KJxT8J2pwWFCWip1fcFFmwoXtW9Gzepk6mhAoxPrE1Jpp3lUhUQdIZHXhvbL1IDn3gw9u177fL4NFgyZI008FETH1T3"
-STRIPE_PUBLISHABLE_KEY = "pk_test_51S7b4m4KJxT8J2pwbBVi9UMlU0KBmGTkxeH8tAYFMnfhF16Trr2ivsHYxNZrym5Pxpna2PeWvc4EawVlLzUv6HQR00Cn1KRiBS"
+STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY")
+STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY")
+STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET")
 
-stripe.api_key = STRIPE_SECRET_KEY
 
-MIN_ORDER_AMOUNT_ZAR = 12  # Minimum order in Rands (~$0.50 USD)
+MIN_ORDER_AMOUNT_ZAR = 12
 
 
 

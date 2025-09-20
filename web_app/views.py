@@ -1,4 +1,5 @@
-import stripe
+from decimal import Decimal
+
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, status
@@ -15,7 +16,6 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.forms import ModelForm
 from django.http import HttpResponseRedirect, JsonResponse
-
 from bakery_app.settings import MIN_ORDER_AMOUNT_ZAR
 from .models import CustomUser, Profile, Category, Product, Cart, Order, OrderItem, VendorSettings
 from .serializers import (
@@ -34,6 +34,10 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 import io
+import stripe
+from django.conf import settings
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 # BASIC PAGES
@@ -167,11 +171,53 @@ def add_to_cart(request, product_id):
 
 @login_required
 def cart_view(request):
-    cart_items = Cart.objects.filter(user=request.user)
-    profile, _ = Profile.objects.get_or_create(user=request.user)
+    user = request.user
+    profile, _ = Profile.objects.get_or_create(user=user)
 
+    # Handle quantity changes
+    if request.method == "POST":
+        product_id = request.POST.get("product_id")
+        action = request.POST.get("action")
+        qty_input = request.POST.get("quantity")
+
+        if product_id and action:
+            cart_item = get_object_or_404(Cart, user=user, product_id=product_id)
+            product = cart_item.product
+
+            # Determine new quantity
+            if action == "increment":
+                if cart_item.quantity < product.stock_quantity:
+                    cart_item.quantity += 1
+                else:
+                    messages.warning(request, f"Cannot add more. Only {product.stock_quantity} in stock.")
+            elif action == "decrement":
+                cart_item.quantity -= 1
+                if cart_item.quantity <= 0:
+                    cart_item.delete()
+                    messages.info(request, f"{product.name} removed from cart.")
+                else:
+                    cart_item.save()
+            elif action == "update":
+                try:
+                    new_qty = int(qty_input)
+                    if new_qty <= 0:
+                        cart_item.delete()
+                        messages.info(request, f"{product.name} removed from cart.")
+                    elif new_qty > product.stock_quantity:
+                        messages.warning(request, f"Cannot set quantity higher than stock ({product.stock_quantity}).")
+                    else:
+                        cart_item.quantity = new_qty
+                        cart_item.save()
+                        messages.success(request, f"{product.name} quantity updated.")
+                except ValueError:
+                    messages.error(request, "Invalid quantity input.")
+
+        return redirect("cart")
+
+    # GET request: display cart
+    cart_items = Cart.objects.filter(user=user)
     cart_data = []
-    total = 0
+    total = Decimal(0)
     for item in cart_items:
         subtotal = item.product.price * item.quantity
         total += subtotal
@@ -187,8 +233,6 @@ def cart_view(request):
         "total": total,
         "profile": profile,
     })
-
-
 # ORDERS
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
@@ -226,82 +270,79 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required
 def checkout_view(request):
     if request.method != "POST":
-        return redirect("cart")
+        return redirect('cart')
 
-    delivery_address = request.POST.get("delivery_address", "").strip()
-    payment_method = request.POST.get("payment_method", "").strip()
-    cart_items = Cart.objects.filter(user=request.user)
+    user = request.user
+    delivery_address = request.POST.get('delivery_address')
+    payment_method = request.POST.get('payment_method')
+    cart_items = Cart.objects.filter(user=user)
 
     if not cart_items.exists():
-        messages.error(request, "Your cart is empty.")
-        return redirect("cart")
+        return JsonResponse({'error': 'Cart is empty'}, status=400)
 
-    if not delivery_address:
-        messages.error(request, "Please provide a delivery address.")
-        return redirect("cart")
+    # Calculate total
+    total = sum(item.product.price * item.quantity for item in cart_items)
 
-    # Calculate total and prepare order items
-    total_price = Decimal(0)
-    line_items = []
-
-    for item in cart_items:
-        line_total = item.product.price * item.quantity
-        total_price += line_total
-        line_items.append({
-            "price_data": {
-                "currency": "zar",  # Always ZAR
-                "product_data": {"name": item.product.name},
-                "unit_amount": int(item.product.price * 100),  # convert R to cents
-            },
-            "quantity": item.quantity,
-        })
-
-    if total_price < MIN_ORDER_AMOUNT_ZAR:
-        messages.error(request, f"Minimum order amount for card payments is R{MIN_ORDER_AMOUNT_ZAR:.2f}")
-        return redirect("cart")
-
-    # Create order in pending state
+    # Create pending order
     order = Order.objects.create(
-        user=request.user,
-        total_price=total_price,
+        user=user,
         delivery_address=delivery_address,
-        status="pending",
+        total_price=total,
+        payment_method=payment_method,
+        status='pending'
     )
 
+    # Add order items
     for item in cart_items:
         OrderItem.objects.create(
             order=order,
             product=item.product,
             quantity=item.quantity,
-            price=item.product.price,
+            price=item.product.price
         )
 
-    cart_items.delete()
+    if payment_method == 'cash':
+        # COD: mark as paid immediately
+        for item in cart_items:
+            product = item.product
+            product.stock_quantity -= item.quantity
+            product.save()
+        cart_items.delete()
+        order.status = 'paid'
+        order.save()
+        return redirect('customer_orders')
 
-    # Handle payment methods
-    if payment_method == "card":
-        try:
-            session = stripe.checkout.Session.create(
-                payment_method_types=["card"],
-                line_items=line_items,
-                mode="payment",
-                success_url=request.build_absolute_uri(reverse("success", args=[order.id])),
-                cancel_url=request.build_absolute_uri(reverse("cancel", args=[order.id])),
-                metadata={"order_id": str(order.id)},
-            )
-            return redirect(session.url, code=303)
-        except stripe.error.InvalidRequestError as e:
-            messages.error(request, f"Stripe error: {e.user_message or str(e)}")
-            order.status = "cancelled"
-            order.save()
-            return redirect("cart")
+    elif payment_method == 'card':
+        # Stripe payment: create checkout session
+        line_items = [
+            {
+                "price_data": {
+                    "currency": "zar",
+                    "product_data": {"name": item.product.name},
+                    "unit_amount": int(item.price * 100),
+                },
+                "quantity": item.quantity,
+            }
+            for item in order.orderitem_set.all()
+        ]
+
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            mode='payment',
+            success_url=request.build_absolute_uri(reverse('stripe_success', args=[order.id])),
+            cancel_url=request.build_absolute_uri(reverse('stripe_cancel', args=[order.id])),
+            metadata={'order_id': str(order.id)}
+        )
+
+        return JsonResponse({'checkout_url': session.url})
 
     else:
-        # For PayPal or COD, show a placeholder notice page
-        return render(request, "payment_pending.html", {"order": order, "payment_method": payment_method})
+        return JsonResponse({'error': 'Unsupported payment method'}, status=400)
+
 
 
 
@@ -378,12 +419,6 @@ class CustomLoginView(LoginView):
         elif user.user_type == "vendor":
             return "/vendor_dash/"
         return "/"
-
-
-# VENDOR DASH
-@login_required
-def vendor_dash(request):
-    return render(request, "vendor_dash.html")
 
 
 # PRODUCT FORMS
@@ -569,18 +604,6 @@ def create_profile_for_new_user(sender, instance, created, **kwargs):
 
 
 @login_required
-def download_report(request):
-    # Later you’ll generate a PDF/CSV here
-    return HttpResponse("Download report (to be implemented)", content_type="text/plain")
-
-
-@login_required
-def print_report(request):
-    # Later you’ll render a printable HTML report
-    return HttpResponse("Print report (to be implemented)", content_type="text/plain")
-
-
-@login_required
 def vendor_edit_profile(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
 
@@ -621,34 +644,6 @@ def customer_orders_view(request):
         user=request.user, status="pending"
     ).order_by("-created_at")
     return render(request, "customer_orders.html", {"orders": orders})
-
-
-@login_required
-def vendor_orders_view(request):
-    vendor = request.user
-
-    vendor_items_qs = (
-        OrderItem.objects.filter(product__vendor=vendor)
-        .select_related("product")
-    )
-
-    orders = (
-        Order.objects.filter(orderitem__product__vendor=vendor, status="pending")  # ✅ only pending
-        .prefetch_related(
-            Prefetch("orderitem_set", queryset=vendor_items_qs, to_attr="vendor_items_list")
-        )
-        .distinct()
-        .order_by("-created_at")
-    )
-
-    # attach vendor_subtotal manually
-    for order in orders:
-        order.vendor_subtotal = sum(item.subtotal for item in order.vendor_items_list)
-
-    return render(request, "vendor/vendor_orders.html", {"orders": orders})
-
-
-
 
 
 @login_required
@@ -969,24 +964,6 @@ def print_report(request):
     })
 
 
-@login_required
-def order_history_view(request):
-    if request.user.user_type == "customer":
-        # only paid (completed) orders for this customer
-        orders = Order.objects.filter(
-            user=request.user,
-            status="paid"
-        ).order_by("-created_at")
-    else:  # vendor
-        # paid (completed) orders that include this vendor's products
-        orders = Order.objects.filter(
-            orderitem__product__vendor=request.user,
-            status="paid"
-        ).distinct().order_by("-created_at")
-
-    return render(request, "order_history.html", {"orders": orders})
-
-
 def product_search(request):
     query = request.GET.get("q", "").strip()
     category_id = request.GET.get("category", "")
@@ -1028,40 +1005,6 @@ def vendor_orders(request):
 
 
 @login_required
-def update_order_status(request, order_id):
-    # Get the order (filter + first avoids MultipleObjectsReturned)
-    order = (
-        Order.objects.filter(id=order_id, orderitem__product__vendor=request.user)
-        .distinct()
-        .first()
-    )
-
-    if not order:
-        messages.error(request, "Order not found or not linked to your products.")
-        return redirect("vendor_orders")
-
-    if request.method == "POST":
-        new_status = request.POST.get("status")
-        if new_status in dict(Order.STATUS_CHOICES).keys():
-            order.status = new_status
-            order.save()
-
-            # only update this vendor’s items
-            if new_status == "paid":
-                vendor_items = order.orderitem_set.filter(product__vendor=request.user)
-                for item in vendor_items:
-                    item.product.stock_quantity -= item.quantity
-                    item.product.save()
-
-            messages.success(request, f"Order #{order.id} updated to {new_status}.")
-        else:
-            messages.error(request, "Invalid status update.")
-
-    return redirect("vendor_orders")
-
-
-
-@login_required
 def customer_orders(request):
     orders = request.user.orders.filter(status="pending").order_by("-created_at")
     return render(request, "customer_orders.html", {"orders": orders})
@@ -1085,7 +1028,14 @@ def customer_order_history(request):
 
 @login_required
 def update_order_status(request, order_id):
-    # Get the order (filter + first avoids MultipleObjectsReturned)
+    """
+    Vendor updates status of their own orders.
+    Only updates items that belong to the vendor.
+    """
+    if request.user.user_type != "vendor":
+        messages.error(request, "Only vendors can update orders.")
+        return redirect("vendor_orders")
+
     order = (
         Order.objects.filter(id=order_id, orderitem__product__vendor=request.user)
         .distinct()
@@ -1102,10 +1052,9 @@ def update_order_status(request, order_id):
             order.status = new_status
             order.save()
 
-            # only update this vendor’s items
+            # Only update vendor-specific items
             if new_status == "paid":
-                vendor_items = order.orderitem_set.filter(product__vendor=request.user)
-                for item in vendor_items:
+                for item in order.orderitem_set.filter(product__vendor=request.user):
                     item.product.stock_quantity -= item.quantity
                     item.product.save()
 
@@ -1143,40 +1092,6 @@ def mark_order_paid(request, order_id):
     messages.success(request, f"Order #{order.id} marked as Paid.")
     return redirect("orders")
 
-
-@login_required
-def vendor_order_history(request):
-    if request.user.user_type != "vendor":
-        messages.error(request, "You do not have permission to view this page.")
-        return redirect("index")
-
-    vendor = request.user
-
-    # prefetch only this vendor's items
-    vendor_items_qs = (
-        OrderItem.objects.filter(product__vendor=vendor)
-        .select_related("product")
-    )
-
-    orders = (
-        Order.objects.filter(
-            orderitem__product__vendor=vendor,
-            status__in=["paid", "cancelled"]
-        )
-        .prefetch_related(
-            Prefetch("orderitem_set", queryset=vendor_items_qs, to_attr="vendor_items_list")
-        )
-        .distinct()
-        .order_by("-created_at")
-    )
-
-    # add vendor-specific subtotal
-    for order in orders:
-        order.vendor_subtotal = sum(item.subtotal for item in order.vendor_items_list)
-
-    return render(request, "vendor/vendor_order_history.html", {
-        "orders": orders,
-    })
 
 @csrf_exempt
 def create_checkout_session(request):
@@ -1277,23 +1192,94 @@ def customer_dashboard(request):
 def stripe_webhook(request):
     payload = request.body
     sig_header = request.META.get("HTTP_STRIPE_SIGNATURE")
-    endpoint_secret = "whsec_..."  # from Stripe dashboard
-    event = None
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
 
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, endpoint_secret
-        )
-    except stripe.error.SignatureVerificationError:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+    except (ValueError, stripe.error.SignatureVerificationError):
         return HttpResponse(status=400)
 
-    # ✅ Handle event
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         order_id = session["metadata"]["order_id"]
 
-        order = Order.objects.get(id=order_id)
+        try:
+            order = Order.objects.get(id=order_id)
+            if order.status != "paid":
+                order.status = "paid"
+                order.save()
+
+                # Reduce stock for all items
+                for item in order.orderitem_set.all():
+                    product = item.product
+                    if product.stock_quantity >= item.quantity:
+                        product.stock_quantity -= item.quantity
+                        product.save()
+        except Order.DoesNotExist:
+            return HttpResponse(status=404)
+
+    return HttpResponse(status=200)
+
+
+@login_required
+def stripe_success(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    if order.status != "paid":
         order.status = "paid"
         order.save()
 
-    return HttpResponse(status=200)
+        # Reduce inventory for card payments
+        for item in order.orderitem_set.all():
+            product = item.product
+            if product.stock_quantity >= item.quantity:
+                product.stock_quantity -= item.quantity
+                product.save()
+
+    return render(request, "success.html", {"order": order})
+
+
+
+def get_vendor_orders(vendor, status_list=None):
+    """
+    Returns orders containing the vendor's products.
+    Optionally filter by status.
+    """
+    qs = OrderItem.objects.filter(product__vendor=vendor)
+    orders = Order.objects.filter(
+        orderitem__product__vendor=vendor
+    )
+    if status_list:
+        orders = orders.filter(status__in=status_list)
+
+    vendor_items_qs = qs.select_related("product")
+    orders = orders.prefetch_related(
+        Prefetch("orderitem_set", queryset=vendor_items_qs, to_attr="vendor_items_list")
+    ).distinct().order_by("-created_at")
+
+    # add vendor subtotal
+    for order in orders:
+        order.vendor_subtotal = sum(item.subtotal for item in order.vendor_items_list)
+
+    return orders
+
+
+@login_required
+def vendor_orders_view(request):
+    if request.user.user_type != "vendor":
+        messages.error(request, "Access denied.")
+        return redirect("index")
+
+    orders = get_vendor_orders(request.user, status_list=["pending"])
+    return render(request, "vendor/vendor_orders.html", {"orders": orders})
+
+
+@login_required
+def vendor_order_history(request):
+    if request.user.user_type != "vendor":
+        messages.error(request, "Access denied.")
+        return redirect("index")
+
+    orders = get_vendor_orders(request.user, status_list=["paid", "cancelled"])
+    return render(request, "vendor/vendor_order_history.html", {"orders": orders})
+
