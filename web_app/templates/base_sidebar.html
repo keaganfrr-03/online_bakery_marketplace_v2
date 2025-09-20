@@ -49,11 +49,13 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
 
+
                     {% if user.is_authenticated %}
                         {% if user.user_type == "customer" %}
                             <li class="nav-item"><a class="nav-link" href="{% url 'cart' %}"><i class="bi bi-cart"></i> Cart</a></li>
                         {% elif user.user_type == "vendor" %}
                             <li class="nav-item"><a class="nav-link" href="{% url 'vendor_dash' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'vendor_activity_logs' %}"><i class="bi bi-list-check"></i> Activity Logs</a></li>
                         {% endif %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'profile' %}"><i class="bi bi-person-circle"></i> Profile</a></li>
                         <li class="nav-item">

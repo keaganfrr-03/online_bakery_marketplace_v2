@@ -1,75 +1,106 @@
 {% extends "base_vendor.html" %}
-{% block title %}Sales Overview{% endblock %}
+{% block title %}Sales Dashboard{% endblock %}
 
 {% block vendor_content %}
-<h1 class="mb-4">Sales Overview</h1>
+<h1 class="mb-4">📊 Sales Dashboard</h1>
 
-<!-- Summary Cards -->
-<div class="row mb-4">
-  <div class="col-md-3"><div class="card text-center bg-light"><div class="card-body"><h5>Today</h5><p class="fs-5">R{{ sales_today }}</p></div></div></div>
-  <div class="col-md-3"><div class="card text-center bg-light"><div class="card-body"><h5>This Week</h5><p class="fs-5">R{{ sales_week }}</p></div></div></div>
-  <div class="col-md-3"><div class="card text-center bg-light"><div class="card-body"><h5>This Month</h5><p class="fs-5">R{{ sales_month }}</p></div></div></div>
-  <div class="col-md-3"><div class="card text-center bg-light"><div class="card-body"><h5>All Time</h5><p class="fs-5">R{{ total_sales }}</p></div></div></div>
+<!-- Period Filter -->
+<div class="mb-4">
+    <a href="?period=day" class="btn btn-outline-primary {% if period == 'day' %}active{% endif %}">Today</a>
+    <a href="?period=week" class="btn btn-outline-primary {% if period == 'week' %}active{% endif %}">This Week</a>
+    <a href="?period=month" class="btn btn-outline-primary {% if period == 'month' %}active{% endif %}">This Month</a>
 </div>
 
-<!-- Sales Chart -->
-<div class="card mb-5">
-  <div class="card-header"><h5 class="mb-0">Sales Trend (Last 30 Days)</h5></div>
-  <div class="card-body">
-    <canvas id="salesChart"></canvas>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-5">
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm rounded-4 p-3 bg-light">
+      <i class="bi bi-currency-dollar display-4 text-success"></i>
+      <h6 class="mt-2">Total Sales</h6>
+      <p class="fs-4 fw-bold">R{{ total_sales }}</p>
+      <small class="text-success">↑ {{ sales_change_percent }}%</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm rounded-4 p-3 bg-light">
+      <i class="bi bi-basket display-4 text-primary"></i>
+      <h6 class="mt-2">Orders</h6>
+      <p class="fs-4 fw-bold">{{ sales_month|floatformat:0 }}</p>
+      <small class="text-success">↑ {{ sales_change_percent }}%</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm rounded-4 p-3 bg-light">
+      <i class="bi bi-graph-up display-4 text-warning"></i>
+      <h6 class="mt-2">Average Sale</h6>
+      <p class="fs-4 fw-bold">R{{ avg_sale }}</p>
+      <small class="text-success">↑ {{ sales_change_percent }}%</small>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm rounded-4 p-3 bg-light">
+      <i class="bi bi-arrow-up-right display-4 text-danger"></i>
+      <h6 class="mt-2">Growth Rate</h6>
+      <p class="fs-4 fw-bold">{{ growth_rate }}%</p>
+      <small class="text-success">↑ {{ sales_change_percent }}%</small>
+    </div>
   </div>
 </div>
 
-<!-- Sales Table -->
-<table class="table table-striped table-bordered text-center align-middle">
-  <thead class="table-dark">
-    <tr>
-      <th>Order ID</th>
-      <th>Date</th>
-      <th>Product</th>
-      <th>Quantity</th>
-      <th>Price</th>
-      <th>Subtotal</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for item in sales %}
-    <tr>
-      <td>#{{ item.order.id }}</td>
-      <td>{{ item.order.created_at|date:"Y-m-d H:i" }}</td>
-      <td>{{ item.product.name }}</td>
-      <td>{{ item.quantity }}</td>
-      <td>R{{ item.price }}</td>
-      <td>R{{ item.subtotal }}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="6" class="text-muted">No sales yet.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+<!-- Charts -->
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm rounded-4 p-3">
+      <h6>Sales by Category</h6>
+      <canvas id="categoryChart" style="height:300px;"></canvas>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm rounded-4 p-3">
+      <h6>Sales per Product</h6>
+      <canvas id="productChart" style="height:300px;"></canvas>
+    </div>
+  </div>
+</div>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const ctx = document.getElementById('salesChart').getContext('2d');
-  new Chart(ctx, {
+const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+new Chart(ctxCategory, {
     type: 'line',
     data: {
-      labels: {{ chart_labels|safe }},
-      datasets: [{
-        label: 'Sales (R)',
-        data: {{ chart_data|safe }},
-        borderColor: 'rgba(75, 192, 192, 1)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.3,
-        fill: true,
-      }]
+        labels: {{ category_chart_labels|safe }},
+        datasets: {{ category_chart_data|safe }}
     },
     options: {
-      responsive: true,
-      plugins: { legend: { display: true, position: 'bottom' } },
-      scales: { y: { beginAtZero: true } }
+        responsive: true,
+        plugins: {
+            legend: { display: true, position: 'bottom' },
+            tooltip: { mode: 'index', intersect: false }
+        },
+        interaction: { mode: 'nearest', intersect: false },
+        scales: { y: { beginAtZero: true } }
     }
-  });
+});
+
+const ctxProduct = document.getElementById('productChart').getContext('2d');
+new Chart(ctxProduct, {
+    type: 'bar',
+    data: {
+        labels: {{ product_chart_labels|safe }},
+        datasets: {{ product_chart_data|safe }}
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: true, position: 'bottom' },
+            tooltip: { mode: 'index', intersect: false }
+        },
+        interaction: { mode: 'nearest', intersect: false },
+        scales: { y: { beginAtZero: true } }
+    }
+});
 </script>
 {% endblock %}

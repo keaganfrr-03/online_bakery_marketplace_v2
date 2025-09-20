@@ -11,14 +11,20 @@
       <th>Name</th>
       <th>Email</th>
       <th>Phone</th>
+      <th>Total Orders</th>
+      <th>Total Spent</th>
+      <th>Last Order</th>
     </tr>
   </thead>
   <tbody>
     {% for customer in customers %}
     <tr>
-      <td>{{ customer.name }}</td>
+      <td>{{ customer.get_full_name }}</td>
       <td>{{ customer.email }}</td>
-      <td>{{ customer.phone }}</td>
+      <td>{{ customer.profile.phone }}</td>
+      <td>{{ customer.total_orders }}</td>
+      <td>R{{ customer.total_spent|default:0 }}</td>
+      <td>{{ customer.last_order|date:"Y-m-d" }}</td>
     </tr>
     {% endfor %}
   </tbody>

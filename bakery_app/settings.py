@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'web_app',
     'bakery_app',
+    'widget_tweaks',
+
 ]
 
 MIDDLEWARE = [
@@ -149,10 +151,48 @@ STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = config("STRIPE_PUBLISHABLE_KEY")
 STRIPE_WEBHOOK_SECRET = config("STRIPE_WEBHOOK_SECRET")
 
-
+# Minimum amount required by Stripe to make transaction in R
 MIN_ORDER_AMOUNT_ZAR = 12
 
+# Logging to file and console
+'''LOGGING_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOGGING_DIR, exist_ok=True)
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOGGING_DIR, 'portal.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'portal': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}'''
 
 
 

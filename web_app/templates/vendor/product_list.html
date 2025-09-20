@@ -2,9 +2,10 @@
 {% block title %}My Products{% endblock %}
 
 {% block vendor_content %}
+<h2 class="mb-4">My Products</h2>
+<p class="text-muted">Manage your bakery products.</p>
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>My Products</h2>
     <a href="{% url 'add_product' %}" class="btn btn-success">
       <i class="bi bi-plus-circle me-1"></i> Add New Product
     </a>
@@ -27,7 +28,7 @@
       <tr>
         <td>
           {% if product.image %}
-          <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-thumbnail" style="max-width: 80px;">
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-thumbnail" style="max-width: 50px;">
           {% else %}
           <span class="text-muted">No image</span>
           {% endif %}
@@ -48,6 +49,42 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <!-- Pagination -->
+  {% if products.has_other_pages %}
+  <nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+      {% if products.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ products.previous_page_number }}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+      {% endif %}
+
+      {% for num in products.paginator.page_range %}
+        {% if products.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+      {% endfor %}
+
+      {% if products.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ products.next_page_number }}" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
   {% else %}
   <p class="text-center mt-4">You have no products yet. Start by adding one!</p>
   {% endif %}

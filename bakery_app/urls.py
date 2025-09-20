@@ -7,7 +7,7 @@ from web_app.views import (
     settings_view, vendor_profile_view, reports_view, customer_list, product_list, vendor_products,
     sales_view, order_history_view, product_search, product_detail, mark_order_paid, customer_orders_view,
     vendor_orders_view, update_order_status, vendor_order_history, customer_order_history, create_checkout_session,
-    success, cancel, customer_dashboard, stripe_webhook)
+    success, cancel, customer_dashboard, stripe_webhook, activity_log_view)
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import render
@@ -77,6 +77,7 @@ urlpatterns = [
     path("vendor/orders/history/", vendor_order_history, name="vendor_order_history"),
     path("order_history/", customer_order_history, name="customer_order_history"),
     path("customer_dashboard/", customer_dashboard, name="customer_dashboard"),
+    path('vendor/activity_logs/', activity_log_view, name='vendor_activity_logs'),
 ]
 
 if settings.DEBUG:

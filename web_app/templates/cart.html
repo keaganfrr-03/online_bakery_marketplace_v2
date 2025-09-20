@@ -20,7 +20,6 @@
 {% endblock %}
 
 {% block content %}
-
 {% if messages %}
 <div class="container mt-3">
     {% for message in messages %}
@@ -107,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         totalCell.textContent = 'R' + total.toFixed(2);
     }
 
+    // Update quantity and remove buttons
     rows.forEach(row => {
         const qtyInput = row.querySelector('.quantity-input');
         const priceCell = row.querySelector('.price');
@@ -146,58 +146,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Unified Checkout Handler
+    // Checkout handler
     const checkoutForm = document.getElementById('checkout-form');
     checkoutForm.addEventListener('submit', async e => {
         e.preventDefault();
         const formData = new FormData(checkoutForm);
         const paymentMethod = formData.get('payment_method');
 
-        // COD - use your existing checkout endpoint
-        if(paymentMethod === 'cash'){
+        try {
             const response = await fetch("{% url 'checkout' %}", {
                 method: 'POST',
                 headers: {'X-CSRFToken': csrfToken},
                 body: formData
             });
-            if(response.redirected) {
-                window.location.href = response.url;
-            } else {
-                const result = await response.json();
-                if(result.error) {
-                    alert('Error: ' + result.error);
-                }
-            }
-        }
-        // Stripe - use the create-checkout-session endpoint
-        else if(paymentMethod === 'card'){
-            try {
-                const response = await fetch("{% url 'create_checkout_session' %}", {
-                    method: 'POST',
-                    headers: {'X-CSRFToken': csrfToken},
-                    body: new URLSearchParams({
-                        'delivery_address': formData.get('delivery_address')
-                    })
-                });
+            const data = await response.json();
 
-                const data = await response.json();
-
-                if(data.checkout_url) {
-                    window.location.href = data.checkout_url;
-                } else {
-                    alert('Error: ' + (data.error || 'Unable to create checkout session'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+            if(data.success && data.cod){
+                alert(data.message);
+                window.location.href = data.redirect_url;
+            } else if(data.checkout_url){
+                window.location.href = data.checkout_url;
+            } else if(data.error){
+                alert('Error: ' + data.error);
             }
-        }
-        // PayPal placeholder
-        else if(paymentMethod === 'paypal'){
-            alert('PayPal checkout is not yet implemented.');
-        }
-        else {
-            alert('Unsupported payment method.');
+        } catch (err){
+            console.error(err);
+            alert('An unexpected error occurred.');
         }
     });
 });
@@ -208,5 +182,4 @@ document.addEventListener('DOMContentLoaded', () => {
     Your cart is empty. <a href="{% url 'index' %}" class="alert-link">Continue shopping</a>.
 </div>
 {% endif %}
-
 {% endblock %}

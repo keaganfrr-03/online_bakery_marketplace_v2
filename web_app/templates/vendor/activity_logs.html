@@ -1,0 +1,47 @@
+{% extends "base_vendor.html" %}
+
+{% block title %}Activity Logs{% endblock %}
+
+{% block sidebar %}
+<ul class="nav flex-column">
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'vendor_dash' %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{% url 'vendor_activity_logs' %}"><i class="bi bi-list-check"></i> Activity Logs</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'vendor_products' %}"><i class="bi bi-box-seam"></i> Products</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{% url 'vendor_orders' %}"><i class="bi bi-bag-check"></i> Orders</a>
+    </li>
+</ul>
+{% endblock %}
+
+{% block vendor_content %}
+<h1 class="mb-4">Recent Activities</h1>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Timestamp</th>
+      <th>Action</th>
+      <th>Details</th>
+      <th>IP</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for log in logs %}
+    <tr>
+      <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+      <td>{{ log.action }}</td>
+      <td>{{ log.details|default:"-" }}</td>
+      <td>{{ log.ip_address|default:"-" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" class="text-muted">No activities yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

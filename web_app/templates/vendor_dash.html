@@ -2,7 +2,7 @@
 {% block title %}Vendor Dashboard{% endblock %}
 
 {% block vendor_content %}
-<h1 class="mb-4">Vendor Dashboard</h1>
+<h2 class="mb-4">Vendor Dashboard</h2>
 <p class="text-muted">Manage your bakery business here.</p>
 
 <div class="row row-cols-1 row-cols-md-4 g-4">
@@ -109,5 +109,32 @@
       </div>
     </a>
   </div>
+
+  <!-- Activity Logs -->
+  <div class="col">
+    <a href="{% url 'vendor_activity_logs' %}" class="text-decoration-none">
+      <div class="card shadow-sm h-100 text-center">
+        <div class="card-body">
+          <i class="bi bi-list-check display-4 text-primary"></i>
+          <h5 class="card-title mt-3">Activity Logs</h5>
+          <p class="text-muted small">View recent actions</p>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Settings Card -->
+    <div class="col6">
+        <a href="{% url 'settings' %}" class="text-decoration-none">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <i class="bi bi-gear display-4 text-primary"></i>
+                    <h5 class="card-title mt-3">Settings</h5>
+                    <p class="text-muted small">Update your preferences</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
 </div>
 {% endblock %}
