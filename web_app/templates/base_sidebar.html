@@ -1,4 +1,5 @@
 {% load static %}
+{% load tz %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +7,8 @@
     <title>{% block title %}Nyarie's Market{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+
     <style>
         body {
             display: flex;
@@ -17,19 +20,20 @@
             flex: 1;
         }
         .sidebar {
-            width: 250px;
-            min-height: 100vh;
-            background-color: #f8f9fa;
-            border-right: 1px solid #dee2e6;
-            padding-top: 1rem;
+            background: linear-gradient(to bottom, #D2691E, #8B4513); /* Chocolate → SaddleBrown */
+            color: #fff;
+            border-right: 1px solid #5C3317;
         }
+
         .sidebar .nav-link {
-            color: #333;
+            color: #fff;
         }
-        .sidebar .nav-link.active {
-            font-weight: bold;
-            color: #0d6efd;
+
+        .sidebar .nav-link.active,
+        .sidebar .nav-link:hover {
+            color: #FFD700; /* golden highlight */
         }
+
         .content-area {
             flex: 1;
             padding: 2rem;
@@ -41,14 +45,17 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'index' %}">Nyarie's Market</a>
+            <a class="navbar-brand d-flex align-items-center fw-bold" href="{% url 'index' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Nyarie's Market Logo" style="height: 90px; margin-right: 10px;">
+                Nyarie's Market
+            </a>
+
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
-
 
                     {% if user.is_authenticated %}
                         {% if user.user_type == "customer" %}
@@ -87,5 +94,46 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+
+<!-- Footer -->
+<footer class="text-center text-lg-start border-top mt-5">
+    <div class="container p-4">
+        <div class="row text-center text-md-start align-items-center">
+            <!-- Logo Column -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <img src="{% static 'images/logo.png' %}" alt="Nyarie's Market Logo" class="img-fluid" style="max-width: 150px;">
+            </div>
+            <!-- Market Info -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="fw-bold">Nyarie's Market</h5>
+                <p>Your trusted online store for quality products and great deals.</p>
+            </div>
+            <!-- Quick Links -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="fw-bold">Quick Links</h5>
+                <ul class="list-unstyled mb-0">
+                    <li><a href="{% url 'about' %}" class="text-white text-decoration-none">About Us</a></li>
+                    <li><a href="{% url 'contact' %}" class="text-white text-decoration-none">Contact</a></li>
+                    <li><a href="#" class="text-white text-decoration-none">Privacy Policy</a></li>
+                    <li><a href="#" class="text-white text-decoration-none">Terms & Conditions</a></li>
+                </ul>
+            </div>
+            <!-- Social -->
+            <div class="col-lg-3 col-md-6 mb-4">
+                <h5 class="fw-bold">Follow Us</h5>
+                <a href="#" class="text-white me-3"><i class="bi bi-facebook"></i></a>
+                <a href="#" class="text-white me-3"><i class="bi bi-twitter"></i></a>
+                <a href="#" class="text-white me-3"><i class="bi bi-instagram"></i></a>
+                <a href="#" class="text-white"><i class="bi bi-linkedin"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="text-center p-3 bg-dark text-white">
+        © {% now "Y" %} Nyarie's Market | All Rights Reserved | Site by eComputer Network Solutions
+    </div>
+
+</footer>
+
+
 </body>
 </html>

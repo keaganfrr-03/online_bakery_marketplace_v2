@@ -1,0 +1,33 @@
+/* Navbar & Footer Colors */
+.navbar, footer {
+    background-color: #8b4d23 !important;
+}
+
+/* Navbar & footer text in white */
+.navbar .nav-link,
+.navbar-brand,
+footer,
+footer a {
+    color: #fff !important;
+}
+
+.navbar .nav-link:hover,
+footer a:hover {
+    color: #f1c40f !important;
+}
+
+/* Buttons */
+.btn-outline-success {
+    border-color: #fff;
+    color: #fff;
+}
+.btn-outline-success:hover {
+    background-color: #f1c40f;
+    border-color: #f1c40f;
+    color: #000;
+}
+
+/* Darker footer bottom bar */
+footer .bg-dark {
+    background-color: #5C3317 !important;
+}
