@@ -7,13 +7,28 @@
 
     <form method="post" class="mx-auto" style="max-width: 400px;">
         {% csrf_token %}
-        {{ form.as_p }}
+
+        <div class="mb-3">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.password.label_tag }}
+            {{ form.password }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.vendor_id.label_tag }}
+            {{ form.vendor_id }}
+        </div>
+
         <button type="submit" class="btn btn-primary w-100">Login</button>
     </form>
+
 
     <p class="text-center mt-3">
         Don’t have an account? <a href="{% url 'register' %}">Register here</a>
     </p>
-
 </div>
 {% endblock %}

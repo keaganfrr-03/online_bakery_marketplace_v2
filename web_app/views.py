@@ -22,7 +22,7 @@ from .models import CustomUser, Profile, Category, Product, Cart, Order, OrderIt
 from .serializers import (
     UserSerializer, ProfileSerializer, CategorySerializer,
     ProductSerializer, CartSerializer, OrderSerializer, OrderItemSerializer)
-from .forms import ProfileForm, VendorProfileForm, VendorSettingsForm
+from .forms import ProfileForm, VendorProfileForm, VendorSettingsForm, VendorLoginForm
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from django.db.models.signals import post_save
@@ -180,6 +180,7 @@ def register_view(request):
 class CustomLoginView(LoginView):
     """Custom login view with cart persistence"""
     template_name = "login.html"
+    authentication_form = VendorLoginForm
 
     def form_valid(self, form):
         response = super().form_valid(form)

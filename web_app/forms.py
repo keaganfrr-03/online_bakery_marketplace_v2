@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth.forms import AuthenticationForm
+
 from .models import Profile
 
 
@@ -82,4 +84,14 @@ class VendorSettingsForm(forms.Form):
         choices=[("day", "Daily"), ("week", "Weekly"), ("month", "Monthly"), ("all", "All Time")],
         initial="week",
         label="Default Report Period"
+    )
+
+
+class VendorLoginForm(AuthenticationForm):
+    vendor_id = forms.CharField(
+        required=False,  # for now it's just visual, not validated
+        label="If you are a vendor, ender your Vendor ID",
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "Enter Vendor ID"}
+        ),
     )
