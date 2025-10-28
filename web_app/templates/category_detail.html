@@ -1,8 +1,32 @@
 {% extends "base.html" %}
 {% block title %}{{ category.name }}{% endblock %}
+{% load static %}
 
 {% block content %}
 <h1 class="text-center mb-4">{{ category.name }}</h1>
+
+<link rel="stylesheet" href="{% static 'css/forms.css' %}">
+
+<style>
+.product-img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    object-position: center;
+}
+
+@media (max-width: 768px) {
+    .product-img {
+        height: 150px;
+    }
+}
+</style>
+
+<div id="snackbar" class="success">
+    <span id="snackbar-msg">Product added to cart!</span>
+    <span class="close-btn" onclick="closeSnackbar()">&times;</span>
+</div>
+
 
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-5 g-4">
     {% for product in products %}
@@ -13,7 +37,7 @@
                 <h5 class="card-title">{{ product.name }}</h5>
                 <p class="card-text text-truncate">{{ product.description }}</p>
                 <p class="fw-bold">R{{ product.price|floatformat:2 }}</p>
-                <form method="post" action="{% url 'add_to_cart' product.id %}">
+                <form method="post" action="{% url 'add_to_cart' product.id %}" data-action="{% url 'add_to_cart' product.id %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-primary mt-auto">Add to Cart</button>
                 </form>
@@ -24,4 +48,73 @@
         <p>No products found in this category.</p>
     {% endfor %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form[data-action]');
+    let snackbarTimeout;
+
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const url = this.dataset.action;
+            const csrfToken = this.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showSnackbar(data.message, 'error');
+                } else {
+                    showSnackbar(data.message, 'success');
+
+                    // ✅ Refresh the page after a short delay so header cart updates
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500); // delay gives time for snackbar to show
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showSnackbar('Failed to add to cart.', 'error');
+            });
+        });
+    });
+
+    function showSnackbar(message, type='success') {
+        const snackbar = document.getElementById('snackbar');
+        const msgSpan = document.getElementById('snackbar-msg');
+
+        if (snackbarTimeout) clearTimeout(snackbarTimeout);
+
+        snackbar.className = type;
+        msgSpan.textContent = message;
+        snackbar.style.display = 'block';
+        snackbar.style.opacity = '1';
+        snackbar.style.transform = 'translateY(0)';
+
+        snackbarTimeout = setTimeout(() => {
+            snackbar.style.opacity = '0';
+            snackbar.style.transform = 'translateY(20px)';
+            setTimeout(() => { snackbar.style.display = 'none'; }, 500);
+        }, 3000);
+    }
+
+    window.closeSnackbar = function() {
+        const snackbar = document.getElementById('snackbar');
+        snackbar.style.opacity = '0';
+        snackbar.style.transform = 'translateY(20px)';
+        setTimeout(() => { snackbar.style.display = 'none'; }, 500);
+    }
+});
+
+</script>
+
 {% endblock %}

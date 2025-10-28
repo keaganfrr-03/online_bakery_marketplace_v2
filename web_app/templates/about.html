@@ -3,68 +3,200 @@
 {% block title %}About Us{% endblock %}
 
 {% block content %}
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
 <!-- Hero Section -->
-<div class="hero-section text-white text-center d-flex align-items-center justify-content-center"
-     style="background: url('{% static 'images/bakery-bg.jpg' %}') center/cover no-repeat; height: 300px; position: relative;">
-    <div class="overlay"
-         style="background-color: rgba(0,0,0,0.5); width: 100%; height: 100%; position: absolute;"></div>
-    <div class="container position-relative">
-        <h1 class="fw-bold display-4">About Us</h1>
-        <p class="lead">Connecting Bakeries and Customers Through Technology</p>
+<div class="hero-section d-flex align-items-center justify-content-center">
+    <div class="hero-content text-center text-white px-4">
+        <h1 class="animate-fade-in">About Us</h1>
+        <p class="animate-fade-in" style="animation-delay: 0.2s;">Connecting Bakeries and Customers Through Technology</p>
     </div>
 </div>
 
-<!-- Main Content -->
-<div class="container mt-5">
-    <div class="card shadow-sm p-4">
-        <div class="row g-4 align-items-center">
-            <!-- Team Image on Left -->
-            <div class="col-md-4 text-center">
+<!-- Story Section -->
+<section class="story-section">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-5 animate-scale-up">
                 <img src="{% static 'images/team.jpeg' %}"
                      alt="Our Team"
-                     class="img-fluid rounded shadow-sm"
-                     style="max-width: 100%; height: auto;">
+                     class="story-image">
             </div>
 
-            <!-- Text Content on Right -->
-            <div class="col-md-8">
-                <h3 class="fw-bold">Empowering Bakeries with Technology</h3>
+            <div class="col-lg-7 story-content animate-fade-in" style="animation-delay: 0.3s;">
+                <h3>Empowering Bakeries with Technology</h3>
                 <p>
-                    Established by a passionate team of <strong>six students</strong>, our vision is to
-                    transform how bakeries and customers connect in the digital age. We bring together
-                    expertise in <strong>business management, software development, AI, IT, and supply chain</strong>.
+                    At <strong>Crumb & Co.</strong>, we empower local bakeries to thrive in the digital age. Traditional
+                    bakeries often face challenges like limited customer access, sold-out favorites, reliance on cash
+                    payments, and lack of online presence. Our platform bridges this gap by providing an easy-to-use
+                    online marketplace where customers can discover, order, and enjoy fresh bakery products with convenience.
+                    Founded by a passionate team of six students with expertise in <strong>business, software, AI, IT,
+                    and supply chain</strong>, <strong>Crumb & Co.</strong> unites artisanal skill with modern technology
+                    to strengthen the connection between bakeries and their communities.
                 </p>
                 <p>
-                    <strong>My Bakery</strong> is not a bakery itself — it’s the digital street where bakeries set up shop
-                    and customers come to discover, order, and enjoy fresh products with convenience.
-                    Think of it as the marketplace that brings artisanal skill and modern technology together.
+                    <strong>Crumb & Co.</strong> is not a bakery itself - it’s the digital street where bakeries set up
+                    shop and customers come to explore, order, and enjoy fresh products. Think of it as a marketplace
+                    that seamlessly blends tradition with innovation.
                 </p>
+
             </div>
-        </div>
-
-        <!-- Extended Info -->
-        <div class="mt-5">
-            <h3 class="mt-4">Our Platform Offers</h3>
-            <ul>
-                <li>A modern, mobile-friendly storefront for bakeries.</li>
-                <li>Live stock and inventory updates so customers always see what’s fresh.</li>
-                <li>Seamless ordering with options for delivery or pickup.</li>
-                <li>Trusted and secure payments through gateways like PayFast and Yoco.</li>
-                <li>Affordable, scalable tools designed for small and growing bakeries.</li>
-            </ul>
-
-            <h3 class="mt-4">Our Promise</h3>
-            <p>
-                Just as bakers set high standards for their craft, we’ve set the same standard for our platform.
-                We focus on <strong>reliability, security, and simplicity</strong> — ensuring that every order placed,
-                every product displayed, and every transaction made is seamless.
-            </p>
-
-            <p class="fw-bold text-center mt-4 text-primary">
-                My Bakery is where <em>technology meets tradition</em> — giving bakeries the digital tools they deserve
-                and customers the convenience they expect. 🥖🍩🍰
-            </p>
         </div>
     </div>
-</div>
+</section>
+
+<!-- Platform Features -->
+<section class="platform-section">
+    <div class="container">
+        <h3 class="text-center animate-fade-in">Our Platform Offers</h3>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.1s;">
+                <div class="feature-card">
+                    <i class="bi bi-phone"></i>
+                    <h5>Mobile-Friendly Storefront</h5>
+                    <p>Modern and responsive design so bakeries shine on any device.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.2s;">
+                <div class="feature-card">
+                    <i class="bi bi-box-seam"></i>
+                    <h5>Live Stock Updates</h5>
+                    <p>Always accurate inventory so customers see fresh products only.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.3s;">
+                <div class="feature-card">
+                    <i class="bi bi-cart-check"></i>
+                    <h5>Seamless Ordering</h5>
+                    <p>Options for delivery or pickup with a simple, secure checkout.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.4s;">
+                <div class="feature-card">
+                    <i class="bi bi-credit-card"></i>
+                    <h5>Trusted Payments</h5>
+                    <p>Secure payments through Stripe, PayFast and Yoco.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.5s;">
+                <div class="feature-card">
+                    <i class="bi bi-tools"></i>
+                    <h5>Scalable & Affordable</h5>
+                    <p>Tools designed for small and growing bakeries.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.6s;">
+                <div class="feature-card">
+                    <i class="bi bi-award"></i>
+                    <h5>Reliable Support</h5>
+                    <p>Dedicated team to help bakeries succeed online.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Promise -->
+        <div class="promise-section animate-fade-in" style="animation-delay: 0.7s;">
+            <h3 class="text-center">Our Promise</h3>
+            <p class="text-center">
+                Just as bakers set high standards for their craft, we've set the same standard for our platform.
+                We focus on <strong>reliability, security, and simplicity</strong> - ensuring that every order placed,
+                every product displayed, and every transaction made is seamless.
+            </p>
+            <div class="promise-highlight">
+                Crumb & Co. is where <em>technology meets tradition</em> - giving bakeries the digital tools they deserve
+                and customers the convenience they expect. 🥖🍩🍰
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="team-section">
+    <div class="container">
+        <h3 class="text-center animate-fade-in">Meet Our Team</h3>
+        <div class="row g-4">
+            <!-- Member 1 -->
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.1s;">
+                <div class="team-card">
+                    <img src="{% static 'images/team_member1.jpg' %}" alt="Alice Johnson">
+                    <h5>Edmore Waruma</h5>
+                    <p>CEO</p>
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com"><i class="bi bi-linkedin"></i></a>
+                        <a href="https://x.com"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member 2 -->
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.2s;">
+                <div class="team-card">
+                    <img src="{% static 'images/team_member2.jpg' %}" alt="Bob Smith">
+                    <h5>Keagan Schutte</h5>
+                    <p>CTO</p>
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com"><i class="bi bi-linkedin"></i></a>
+                        <a href="https://x.com"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member 3 -->
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.3s;">
+                <div class="team-card">
+                    <img src="{% static 'images/team_member3.jpg' %}" alt="Carol Lee">
+                    <h5>Lolo Mapuma</h5>
+                    <p>Designer</p>
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com"><i class="bi bi-linkedin"></i></a>
+                        <a href="https://x.com"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member 4 -->
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.4s;">
+                <div class="team-card">
+                    <img src="{% static 'images/team_member4.jpg' %}" alt="David Brown">
+                    <h5>Mbuso Zulu</h5>
+                    <p>Developer</p>
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com"><i class="bi bi-linkedin"></i></a>
+                        <a href="https://x.com"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member 5 -->
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.5s;">
+                <div class="team-card">
+                    <img src="{% static 'images/team_member5.jpg' %}" alt="Eva Green">
+                    <h5>Hamza Hoosen</h5>
+                    <p>Marketing</p>
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com"><i class="bi bi-linkedin"></i></a>
+                        <a href="https://x.com"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member 6 -->
+            <div class="col-lg-4 col-md-6 animate-scale-up" style="animation-delay: 0.6s;">
+                <div class="team-card">
+                    <img src="{% static 'images/team_member6.jpg' %}" alt="Frank White">
+                    <h5>Lebogang Maluleke</h5>
+                    <p>Support</p>
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com"><i class="bi bi-linkedin"></i></a>
+                        <a href="https://x.com"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
 {% endblock %}

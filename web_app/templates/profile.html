@@ -1,9 +1,15 @@
 {% extends "base_sidebar.html" %}
-{% block title %}My Profile{% endblock %}
+{% load static %}
 {% load widget_tweaks %}
 
+{% block title %}My Profile{% endblock %}
+
 {% block sidebar %}
-<h6 class="px-3 mt-3 mb-2 text-muted text-uppercase small">My Account</h6>
+
+<!-- Contact page specific CSS -->
+<link rel="stylesheet" href="{% static 'css/customer.css' %}">
+
+<h6 class="sidebar-section-title">My Account</h6>
 <ul class="nav flex-column">
     <li class="nav-item"><a class="nav-link active" href="{% url 'profile' %}"><i class="bi bi-person-circle me-2"></i> Profile Info</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'customer_orders' %}"><i class="bi bi-cart-check me-2"></i> Orders</a></li>
@@ -11,7 +17,7 @@
     <li class="nav-item"><a class="nav-link" href="{% url 'cart' %}"><i class="bi bi-bag me-2"></i> Cart</a></li>
 </ul>
 
-<h6 class="px-3 mt-4 mb-2 text-muted text-uppercase small">Navigation</h6>
+<h6 class="sidebar-section-title">Navigation</h6>
 <ul class="nav flex-column mb-2">
     <li class="nav-item"><a class="nav-link" href="{% url 'index' %}"><i class="bi bi-house me-2"></i> Home</a></li>
     <li class="nav-item"><a class="nav-link" href="{% url 'about' %}"><i class="bi bi-info-circle me-2"></i> About</a></li>
@@ -19,62 +25,142 @@
 </ul>
 {% endblock %}
 
-
 {% block content %}
-<h2 class="mb-4">My Profile</h2>
-<p>Manage your profile details</p>
-<div class="row justify-content-center mt-5">
-    <div class="col-lg-8 col-md-10">
-        <div class="card shadow-sm border-0 rounded-4 p-4">
 
+
+<div class="profile-header">
+    <h2><i class="bi bi-person-circle me-2"></i> My Profile</h2>
+    <p>Manage your personal information and preferences</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="profile-card">
             <form method="post">
                 {% csrf_token %}
 
-                <!-- Name, Surname, Phone, Mobile -->
-                <div class="row g-3 mb-3">
-                    <div class="col-md-3">
-                        {{ form.first_name.label_tag }}
-                        {{ form.first_name|add_class:"form-control" }}
+                <!-- Personal Information Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-person-badge"></i>
+                        Personal Information
                     </div>
-                    <div class="col-md-3">
-                        {{ form.last_name.label_tag }}
-                        {{ form.last_name|add_class:"form-control" }}
-                    </div>
-                    <div class="col-md-3">
-                        {{ form.phone.label_tag }}
-                        {{ form.phone|add_class:"form-control" }}
-                    </div>
-                    <div class="col-md-3">
-                        {{ form.mobile.label_tag }}
-                        {{ form.mobile|add_class:"form-control" }}
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.first_name.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-person"></i>
+                                {{ form.first_name|add_class:"form-control"|attr:"placeholder:First name" }}
+                            </div>
+                            {% if form.first_name.errors %}
+                                <small class="text-danger">{{ form.first_name.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.last_name.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-person"></i>
+                                {{ form.last_name|add_class:"form-control"|attr:"placeholder:Last name" }}
+                            </div>
+                            {% if form.last_name.errors %}
+                                <small class="text-danger">{{ form.last_name.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.phone.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-telephone"></i>
+                                {{ form.phone|add_class:"form-control"|attr:"placeholder:Phone number" }}
+                            </div>
+                            {% if form.phone.errors %}
+                                <small class="text-danger">{{ form.phone.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.mobile.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-phone"></i>
+                                {{ form.mobile|add_class:"form-control"|attr:"placeholder:Mobile number" }}
+                            </div>
+                            {% if form.mobile.errors %}
+                                <small class="text-danger">{{ form.mobile.errors.0 }}</small>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
-                <!-- Email and Payment Method -->
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        {{ form.email.label_tag }}
-                        {{ form.email|add_class:"form-control" }}
+                <!-- Account & Payment Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-credit-card"></i>
+                        Account & Payment
                     </div>
-                    <div class="col-md-6">
-                        {{ form.payment_method.label_tag }}
-                        {{ form.payment_method|add_class:"form-select" }}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.email.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-envelope"></i>
+                                {{ form.email|add_class:"form-control"|attr:"placeholder:your.email@example.com" }}
+                            </div>
+                            {% if form.email.errors %}
+                                <small class="text-danger">{{ form.email.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.payment_method.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-wallet2"></i>
+                                {{ form.payment_method|add_class:"form-select" }}
+                            </div>
+                            {% if form.payment_method.errors %}
+                                <small class="text-danger">{{ form.payment_method.errors.0 }}</small>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
 
-                <!-- Delivery Address -->
-                <div class="mb-4">
-                    {{ form.delivery_address.label_tag }}
-                    {{ form.delivery_address|add_class:"form-control" }}
+                <!-- Delivery Address Section -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-geo-alt"></i>
+                        Delivery Address
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">{{ form.delivery_address.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-house"></i>
+                                {{ form.delivery_address|add_class:"form-control"|attr:"placeholder:Enter your full delivery address"|attr:"rows:3" }}
+                            </div>
+                            <small class="help-text">Include street address, city, and postal code</small>
+                            {% if form.delivery_address.errors %}
+                                <small class="text-danger d-block">{{ form.delivery_address.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Submit -->
-                <div class="text-center mt-3">
-                    <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
-                </div>
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ form.non_field_errors.0 }}
+                    </div>
+                {% endif %}
 
+                <!-- Submit Button -->
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-check-circle me-2"></i> Save Changes
+                    </button>
+                </div>
             </form>
-
         </div>
     </div>
 </div>

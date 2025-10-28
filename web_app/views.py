@@ -58,9 +58,18 @@ def category_detail(request, category_id):
     """Display products within a specific category"""
     category = get_object_or_404(Category, id=category_id)
     products = Product.objects.filter(category=category)
+
+    # ✅ Calculate cart item count if user is authenticated
+    cart_item_count = 0
+    if request.user.is_authenticated:
+        cart_item_count = Cart.objects.filter(user=request.user).aggregate(
+            total=Sum('quantity')
+        )['total'] or 0
+
     return render(request, "category_detail.html", {
         "category": category,
         "products": products,
+        "cart_item_count": cart_item_count,  # pass to template
     })
 
 
@@ -525,14 +534,32 @@ def add_to_cart(request, product_id):
                 cart_item.quantity += qty
                 cart_item.save()
 
-            # ✅ Stay on same page
+            # ✅ If AJAX request, return JSON for snackbar
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    "message": f'"{product.name}" added to cart!',
+                    "quantity": cart_item.quantity,
+                    "product_id": product.id
+                })
+
+            # Normal form submission: redirect back
             return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
         else:
+            # Store pending cart in session
             request.session["pending_cart"] = {
                 "product_id": product_id,
                 "qty": qty
             }
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    "message": "Please log in to add items to your cart.",
+                    "error": True
+                }, status=401)
+
             return redirect("login")
+
     return redirect("index")
 
 

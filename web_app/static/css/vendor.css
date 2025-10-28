@@ -91,3 +91,19 @@
     padding: 0 1rem;               /* Indent text from left edge */
     color: #A0522D;                /* Brown heading color */
 }
+
+/* === Custom Vendor Buttons === */
+/* Only affect buttons inside vendor content area */
+.content-area.vendor .btn-success {
+    background-color: #A0522D;  /* brown */
+    color: #fff;
+    border: none;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.content-area.vendor .btn-success:hover {
+    background-color: #8B4513;  /* darker brown on hover */
+    color: #fff;
+}
+
+
