@@ -1742,4 +1742,19 @@ def activity_log_view(request):
     return render(request, "vendor/activity_logs.html", {"logs": logs})
 
 
+def handle_paypal_payment(request, order):
+    """
+    PayPal payment handler - Currently not implemented
+    Returns error message prompting user to select alternative payment
+    """
+    log_activity(
+        user=order.user,
+        action="PayPal Attempted",
+        details=f"User tried PayPal for Order #{order.id} (not yet active)"
+    )
+
+    return JsonResponse({
+        'error': 'PayPal payment method is not active yet. Please use Card or Cash on Delivery.',
+        'alternative_methods': ['card', 'cash']
+    }, status=400)
 

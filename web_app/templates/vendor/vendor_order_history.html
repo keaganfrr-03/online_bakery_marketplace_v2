@@ -1,51 +1,169 @@
 {% extends "base_vendor.html" %}
+{% load static %}
+
 {% block title %}Order History{% endblock %}
 
-{% block vendor_content %}
-<h2 class="mb-4">Order History</h2>
-<p class="text-muted">Paid and Cancelled Orders</p>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vendor.css' %}">
+{% endblock %}
 
-{% if orders %}
-    <table class="table table-bordered align-middle">
-        <thead>
-            <tr>
-                <th>Order #</th>
-                <th>Customer</th>
-                <th>Items (Your Products Only)</th>
-                <th>Your Subtotal</th>
-                <th>Global Total</th>
-                <th>Status</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for order in orders %}
-                <tr>
-                    <td>{{ order.id }}</td>
-                    <td>{{ order.user.username }}</td>
-                    <td>
-                        <ul class="list-unstyled mb-0">
-                            {% for item in order.vendor_items_list %}
-                                <li>{{ item.product.name }} (x{{ item.quantity }}) - R{{ item.subtotal }}</li>
+{% block vendor_content %}
+
+<div class="profile-header">
+    <h2><i class="bi bi-clock-history me-2"></i> Order History</h2>
+    <p>View all completed, paid, and cancelled orders</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="profile-card">
+
+            {% if orders %}
+                <!-- Order History Stats -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="customer-stat-card">
+                            <div class="stat-icon">
+                                <i class="bi bi-archive"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h6>Total Orders</h6>
+                                <p class="stat-value">{{ orders|length }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="customer-stat-card">
+                            <div class="stat-icon stat-orders">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h6>Paid Orders</h6>
+                                <p class="stat-value">{{ paid_count|default:"0" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="customer-stat-card">
+                            <div class="stat-icon stat-cancelled">
+                                <i class="bi bi-x-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h6>Cancelled Orders</h6>
+                                <p class="stat-value">{{ cancelled_count|default:"0" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Table -->
+                <div class="table-responsive">
+                    <table class="table activity-table order-history-table">
+                        <thead>
+                            <tr>
+                                <th><i class="bi bi-hash me-2"></i>Order #</th>
+                                <th><i class="bi bi-person me-2"></i>Customer</th>
+                                <th><i class="bi bi-box-seam me-2"></i>Items (Your Products)</th>
+                                <th><i class="bi bi-tag me-2"></i>Your Subtotal</th>
+                                <th><i class="bi bi-currency-dollar me-2"></i>Global Total</th>
+                                <th><i class="bi bi-info-circle me-2"></i>Status</th>
+                                <th><i class="bi bi-calendar-event me-2"></i>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr class="activity-row order-history-row">
+                                <td class="order-number">
+                                    <span class="badge-order">#{{ order.id }}</span>
+                                </td>
+                                <td class="customer-name-cell">
+                                    <i class="bi bi-person-circle text-muted me-1"></i>
+                                    {{ order.user.username }}
+                                </td>
+                                <td class="items-cell">
+                                    <div class="order-items-list">
+                                        {% for item in order.vendor_items_list %}
+                                            <div class="order-item-row">
+                                                <span class="item-name">{{ item.product.name }}</span>
+                                                <span class="item-quantity">×{{ item.quantity }}</span>
+                                                <span class="item-price">R{{ item.subtotal }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td class="subtotal-cell">
+                                    <strong>R{{ order.vendor_subtotal }}</strong>
+                                </td>
+                                <td class="total-cell">
+                                    <span class="global-total">R{{ order.total_price }}</span>
+                                </td>
+                                <td class="status-cell">
+                                    <span class="status-badge
+                                        {% if order.status == 'paid' %}status-paid
+                                        {% elif order.status == 'cancelled' %}status-cancelled
+                                        {% else %}status-default
+                                        {% endif %}">
+                                        <i class="bi
+                                            {% if order.status == 'paid' %}bi-check-circle
+                                            {% elif order.status == 'cancelled' %}bi-x-circle
+                                            {% else %}bi-clock
+                                            {% endif %} me-1"></i>
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="timestamp-cell">
+                                    <i class="bi bi-clock text-muted me-1"></i>
+                                    {{ order.created_at|date:"Y-m-d H:i" }}
+                                </td>
+                            </tr>
                             {% endfor %}
-                        </ul>
-                    </td>
-                    <td>R{{ order.vendor_subtotal }}</td>
-                    <td>R{{ order.total_price }}</td>
-                    <td>
-                        <span class="badge
-                            {% if order.status == 'paid' %} bg-success
-                            {% elif order.status == 'cancelled' %} bg-danger
-                            {% endif %}">
-                            {{ order.get_status_display }}
-                        </span>
-                    </td>
-                    <td>{{ order.created_at|date:"Y-m-d H:i" }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p class="text-muted">No past orders found.</p>
-{% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination (if needed) -->
+                {% if orders.has_other_pages %}
+                <nav aria-label="Order history pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if orders.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ orders.previous_page_number }}">
+                                <i class="bi bi-chevron-left"></i> Previous
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in orders.paginator.page_range %}
+                        <li class="page-item {% if orders.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+
+                        {% if orders.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ orders.next_page_number }}">
+                                Next <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+            {% else %}
+                <!-- Empty State -->
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h4>No Order History</h4>
+                    <p>You don't have any completed, paid, or cancelled orders yet. Your order history will appear here.</p>
+                    <a href="{% url 'vendor_orders' %}" class="btn-browse">
+                        <i class="bi bi-bag-check me-2"></i> View Active Orders
+                    </a>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
 {% endblock %}

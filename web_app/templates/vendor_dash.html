@@ -1,9 +1,18 @@
 {% extends "base_vendor.html" %}
+{% load static %}
+
 {% block title %}Vendor Dashboard{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vendor.css' %}">
+{% endblock %}
+
 {% block vendor_content %}
-<h2 class="mb-4">Vendor Dashboard</h2>
-<p class="text-muted">Manage your bakery business here.</p>
+
+<div class="profile-header">
+    <h2><i class="bi bi-speedometer2 me-2"></i> Vendor Dashboard</h2>
+    <p>Manage your bakery business and monitor your performance</p>
+</div>
 
 <div class="row row-cols-1 row-cols-md-4 g-4">
   <!-- My Products -->

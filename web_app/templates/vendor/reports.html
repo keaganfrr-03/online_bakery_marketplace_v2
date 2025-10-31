@@ -1,74 +1,146 @@
 {% extends "base_vendor.html" %}
-{% block title %}Reports{% endblock %}
+{% load static %}
+
+{% block title %}Sales Reports{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vendor.css' %}">
+{% endblock %}
 
 {% block vendor_content %}
-<h2>Reports</h2>
 
-<form method="get" class="mb-3">
-    <label for="period">Select Period:</label>
-    <select name="period" id="period" class="form-select w-auto d-inline" onchange="this.form.submit()">
-        <option value="all" {% if period == "all" %}selected{% endif %}>All Time</option>
-        <option value="day" {% if period == "day" %}selected{% endif %}>Today</option>
-        <option value="week" {% if period == "week" %}selected{% endif %}>This Week</option>
-        <option value="month" {% if period == "month" %}selected{% endif %}>This Month</option>
-    </select>
-</form>
+<div class="profile-header">
+    <h2><i class="bi bi-bar-chart-line me-2"></i> Sales Reports</h2>
+    <p>View and analyze your sales performance over different time periods</p>
+</div>
 
-{% if sales %}
-    <div class="d-flex justify-content-between align-items-center mt-4">
-        <h4 class="mb-0">
-            Total Sales
-            {% if period == "day" %}(Today){% endif %}
-            {% if period == "week" %}(This Week){% endif %}
-            {% if period == "month" %}(This Month){% endif %}
-            {% if period == "all" %}(All Time){% endif %}
-        </h4>
-        <div>
-            <!-- Print button -->
-            <a href="{% url 'print_report' %}?period={{ period }}" target="_blank" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-printer"></i> Print
-            </a>
-            <!-- Download button -->
-            <a href="{% url 'download_report' %}?period={{ period }}" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-download"></i> Download
-            </a>
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="profile-card">
+
+            <!-- Period Filter Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-calendar-range"></i>
+                    Select Report Period
+                </div>
+
+                <form method="get" class="period-filter-form">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-6">
+                            <label for="period" class="form-label">Time Period:</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-calendar3"></i>
+                                <select name="period" id="period" class="form-select" onchange="this.form.submit()">
+                                    <option value="all" {% if period == "all" %}selected{% endif %}>All Time</option>
+                                    <option value="day" {% if period == "day" %}selected{% endif %}>Today</option>
+                                    <option value="week" {% if period == "week" %}selected{% endif %}>This Week</option>
+                                    <option value="month" {% if period == "month" %}selected{% endif %}>This Month</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <button type="submit" class="btn-filter">
+                                <i class="bi bi-funnel me-2"></i> Apply Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            {% if sales %}
+                <!-- Summary Section -->
+                <div class="form-section">
+                    <div class="report-header">
+                        <div class="report-title">
+                            <h4 class="mb-0">
+                                <i class="bi bi-graph-up me-2"></i>
+                                Total Sales
+                                <span class="period-badge">
+                                    {% if period == "day" %}Today{% endif %}
+                                    {% if period == "week" %}This Week{% endif %}
+                                    {% if period == "month" %}This Month{% endif %}
+                                    {% if period == "all" %}All Time{% endif %}
+                                </span>
+                            </h4>
+                            <p class="total-amount">R{{ total_sales }}</p>
+                        </div>
+                        <div class="report-actions">
+                            <a href="{% url 'print_report' %}?period={{ period }}" target="_blank" class="btn-action btn-print">
+                                <i class="bi bi-printer me-1"></i> Print
+                            </a>
+                            <a href="{% url 'download_report' %}?period={{ period }}" class="btn-action btn-download">
+                                <i class="bi bi-download me-1"></i> Download
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sales Table -->
+                <div class="table-responsive">
+                    <table class="table activity-table sales-table">
+                        <thead>
+                            <tr>
+                                <th><i class="bi bi-hash me-2"></i>Order #</th>
+                                <th><i class="bi bi-box-seam me-2"></i>Product</th>
+                                <th><i class="bi bi-123 me-2"></i>Quantity</th>
+                                <th><i class="bi bi-tag me-2"></i>Price (Each)</th>
+                                <th><i class="bi bi-currency-dollar me-2"></i>Subtotal</th>
+                                <th><i class="bi bi-calendar-event me-2"></i>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sales %}
+                            <tr class="activity-row">
+                                <td class="order-number">
+                                    <span class="badge-order">#{{ item.order.id }}</span>
+                                </td>
+                                <td class="product-name">{{ item.product.name }}</td>
+                                <td class="quantity-cell">
+                                    <span class="quantity-badge">{{ item.quantity }}</span>
+                                </td>
+                                <td class="price-cell">R{{ item.price }}</td>
+                                <td class="subtotal-cell">
+                                    <strong>R{{ item.subtotal }}</strong>
+                                </td>
+                                <td class="timestamp-cell">
+                                    <i class="bi bi-clock text-muted me-1"></i>
+                                    {{ item.order.created_at|date:"Y-m-d H:i" }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <th colspan="4" class="text-end">
+                                    <i class="bi bi-calculator me-2"></i>
+                                    Total
+                                    <span class="period-text">
+                                        ({% if period == "day" %}Today{% elif period == "week" %}This Week{% elif period == "month" %}This Month{% else %}All Time{% endif %})
+                                    </span>
+                                </th>
+                                <th colspan="2" class="total-amount-footer">
+                                    R{{ total_sales }}
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+            {% else %}
+                <!-- Empty State -->
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h4>No Sales Data Available</h4>
+                    <p>No sales were found for the selected period. Try choosing a different time range.</p>
+                    <a href="{% url 'vendor_products' %}" class="btn-browse">
+                        <i class="bi bi-box-seam me-2"></i> Manage Products
+                    </a>
+                </div>
+            {% endif %}
+
         </div>
     </div>
-
-    <p><strong>R{{ total_sales }}</strong></p>
-
-    <table class="table table-bordered table-striped mt-4">
-        <thead>
-            <tr>
-                <th>Order #</th>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Price (Each)</th>
-                <th>Subtotal</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in sales %}
-            <tr>
-                <td>{{ item.order.id }}</td>
-                <td>{{ item.product.name }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>R{{ item.price }}</td>
-                <td>R{{ item.subtotal }}</td>
-                <td>{{ item.order.created_at|date:"Y-m-d H:i" }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <tr>
-                <th colspan="4" class="text-end">Total ({{ period|title }})</th>
-                <th colspan="2">R{{ total_sales }}</th>
-            </tr>
-        </tfoot>
-    </table>
-{% else %}
-    <p class="text-muted">No sales found for this period.</p>
-{% endif %}
+</div>
 
 {% endblock %}

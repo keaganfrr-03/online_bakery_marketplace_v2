@@ -37,12 +37,12 @@ Expiration date: any future date (e.g., 12/34)
 CVC: any 3 digits (e.g., 123)
 ZIP: any 5 digits (e.g., 12345)
 
-| Card Type        | Number              | Notes           |
-| ---------------- | ------------------- | --------------- |
-| Visa             | 4242 4242 4242 4242 | Always succeeds |
-| Visa             | 4000 0000 0000 9995 | Always fails    |
-| Mastercard       | 5555 5555 5555 4444 | Always succeeds |
-| American Express | 3782 822463 10005   | Always succeeds |
+| Card Type        | Number              | Notes                           |
+| ---------------- | ------------------- |---------------------------------|
+| Visa             | 4242 4242 4242 4242 | Always succeeds                 |
+| Visa             | 4000 0000 0000 9995 | Always fails(insufficient funds |
+| Mastercard       | 5555 5555 5555 4444 | Always succeeds                 |
+| American Express | 3782 822463 10005   | Always succeeds                 |
 
 
 | Group                         | Function Name                     | Description                                            |

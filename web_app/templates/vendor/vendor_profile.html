@@ -1,23 +1,94 @@
 {% extends "base_vendor.html" %}
+{% load static %}
+
 {% block title %}Vendor Profile{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vendor.css' %}">
+{% endblock %}
+
 {% block vendor_content %}
-<h1 class="mb-4">Vendor Profile</h1>
 
-<div class="card">
-  <div class="card-body">
-    <h4 class="card-title">{{ request.user.username }}</h4>
-    <p><strong>Name:</strong> {{ request.user.first_name }} {{ request.user.last_name }}</p>
-    <p><strong>Company Name:</strong> {{ profile.company_name }}</p>
-    <p><strong>Vendor ID:</strong> {{ profile.vendor_id }}</p>
-    <p><strong>Email:</strong> {{ request.user.email }}</p>
-    <p><strong>Telephone:</strong> {{ profile.phone }}</p>
-    <p><strong>Mobile:</strong> {{ profile.mobile }}</p>
-    <p><strong>Address:</strong> {{ profile.delivery_address }}</p>
-  </div>
+<div class="profile-header">
+    <h2><i class="bi bi-building me-2"></i> Vendor Profile</h2>
+    <p>Manage your business information and account details</p>
 </div>
 
-<div class="mt-3">
-  <a href="{% url 'vendor_edit_profile' %}" class="btn btn-primary">Edit Vendor Profile</a>
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="profile-card">
+
+            <!-- Company Information Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-briefcase"></i>
+                    Company Information
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Company Name</label>
+                        <div class="input-group-icon">
+                            <i class="bi bi-building"></i>
+                            <input type="text" class="form-control" value="{{ profile.company_name }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Vendor ID</label>
+                        <div class="input-group-icon">
+                            <i class="bi bi-upc-scan"></i>
+                            <input type="text" class="form-control" value="{{ profile.vendor_id }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <div class="input-group-icon">
+                            <i class="bi bi-envelope"></i>
+                            <input type="email" class="form-control" value="{{ request.user.email }}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <i class="bi bi-telephone"></i>
+                    Contact Information
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Telephone</label>
+                        <div class="input-group-icon">
+                            <i class="bi bi-telephone-fill"></i>
+                            <input type="text" class="form-control" value="{{ profile.phone }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Mobile</label>
+                        <div class="input-group-icon">
+                            <i class="bi bi-phone"></i>
+                            <input type="text" class="form-control" value="{{ profile.mobile }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Address</label>
+                        <div class="input-group-icon">
+                            <i class="bi bi-geo-alt"></i>
+                            <input type="text" class="form-control" value="{{ profile.delivery_address }}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="text-center mt-4">
+                <a href="{% url 'vendor_edit_profile' %}" class="btn-save">
+                    <i class="bi bi-pencil-square me-2"></i> Edit Vendor Profile
+                </a>
+            </div>
+
+        </div>
+    </div>
 </div>
+
 {% endblock %}

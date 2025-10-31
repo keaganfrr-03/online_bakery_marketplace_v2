@@ -1,18 +1,197 @@
-{% extends "base.html" %}
+{% extends "base_vendor.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
 {% block title %}{{ title }}{% endblock %}
 
-{% block content %}
-<div class="container mt-5" style="max-width: 600px;">
-    <h2 class="mb-4 text-center">{{ title }}</h2>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vendor.css' %}">
+{% endblock %}
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-success w-100">Save Changes</button>
-    </form>
+{% block vendor_content %}
 
-    <div class="mt-3 text-center">
-        <a href="{% url 'vendor_dash' %}" class="btn btn-secondary">Back to Dashboard</a>
+<div class="profile-header">
+    <h2><i class="bi bi-{% if 'Add' in title %}plus-circle{% else %}pencil-square{% endif %} me-2"></i> {{ title }}</h2>
+    <p>{% if 'Add' in title %}Add a new product to your catalog{% else %}Update your product information{% endif %}</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+        <div class="profile-card">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- Product Basic Information -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-info-circle"></i>
+                        Basic Information
+                    </div>
+
+                    <div class="row g-3">
+                        {% if form.name %}
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.name.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-tag"></i>
+                                {{ form.name|add_class:"form-control"|attr:"placeholder:Product name" }}
+                            </div>
+                            {% if form.name.errors %}
+                                <small class="text-danger">{{ form.name.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if form.category %}
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.category.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-grid"></i>
+                                {{ form.category|add_class:"form-select" }}
+                            </div>
+                            {% if form.category.errors %}
+                                <small class="text-danger">{{ form.category.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if form.description %}
+                        <div class="col-12">
+                            <label class="form-label">{{ form.description.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-text-paragraph"></i>
+                                {{ form.description|add_class:"form-control"|attr:"placeholder:Detailed product description"|attr:"rows:4" }}
+                            </div>
+                            {% if form.description.errors %}
+                                <small class="text-danger">{{ form.description.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Pricing & Stock -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-currency-dollar"></i>
+                        Pricing & Inventory
+                    </div>
+
+                    <div class="row g-3">
+                        {% if form.price %}
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.price.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-tag-fill"></i>
+                                {{ form.price|add_class:"form-control"|attr:"placeholder:0.00" }}
+                            </div>
+                            <small class="help-text">Enter price in Rands (R)</small>
+                            {% if form.price.errors %}
+                                <small class="text-danger d-block">{{ form.price.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        {% if form.stock_quantity %}
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.stock_quantity.label }}</label>
+                            <div class="input-group-icon">
+                                <i class="bi bi-box-seam"></i>
+                                {{ form.stock_quantity|add_class:"form-control"|attr:"placeholder:0" }}
+                            </div>
+                            <small class="help-text">Available units in stock</small>
+                            {% if form.stock_quantity.errors %}
+                                <small class="text-danger d-block">{{ form.stock_quantity.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Product Image -->
+                {% if form.image %}
+                <div class="form-section">
+                    <div class="section-title">
+                        <i class="bi bi-image"></i>
+                        Product Image
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="form-label">{{ form.image.label }}</label>
+                            <div class="image-upload-wrapper">
+                                {% if form.instance.image %}
+                                    <div class="current-image-preview">
+                                        <img src="{{ form.instance.image.url }}" alt="Current product image" class="preview-img">
+                                        <p class="text-muted mt-2 mb-2"><small>Current image (upload new to replace)</small></p>
+                                    </div>
+                                {% endif %}
+                                <div class="custom-file-upload">
+                                    <i class="bi bi-cloud-upload"></i>
+                                    <span class="upload-text">Click to upload or drag and drop</span>
+                                    {{ form.image|add_class:"form-control-file" }}
+                                </div>
+                                <small class="help-text">Recommended: Square images (e.g., 800x800px), JPG or PNG format</small>
+                            </div>
+                            {% if form.image.errors %}
+                                <small class="text-danger d-block">{{ form.image.errors.0 }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Additional Fields (if any) -->
+                {% for field in form %}
+                    {% if field.name not in 'name,category,description,price,stock_quantity,image' %}
+                    <div class="form-section">
+                        <div class="row">
+                            <div class="col-12">
+                                <label class="form-label">{{ field.label }}</label>
+                                <div class="input-group-icon">
+                                    <i class="bi bi-gear"></i>
+                                    {% if field.field.widget.input_type == 'checkbox' %}
+                                        <div class="form-check form-switch ms-5">
+                                            {{ field|add_class:"form-check-input" }}
+                                        </div>
+                                    {% elif field.field.widget.input_type == 'select' %}
+                                        {{ field|add_class:"form-select" }}
+                                    {% else %}
+                                        {{ field|add_class:"form-control" }}
+                                    {% endif %}
+                                </div>
+                                {% if field.help_text %}
+                                    <small class="help-text">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <small class="text-danger">{{ field.errors.0 }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        {{ form.non_field_errors.0 }}
+                    </div>
+                {% endif %}
+
+                <!-- Submit Buttons -->
+                <div class="text-center mt-4">
+                    <a href="{% url 'vendor_products' %}" class="btn btn-secondary me-3">
+                        <i class="bi bi-x-circle me-2"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-check-circle me-2"></i> Save Product
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
 {% endblock %}

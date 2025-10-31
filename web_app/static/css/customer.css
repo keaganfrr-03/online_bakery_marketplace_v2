@@ -1,3 +1,7 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
 .profile-header {
     background: linear-gradient(135deg, #8b4d23 0%, #5C3317 100%);
     color: white;
