@@ -9,16 +9,13 @@ Setup
 6. Install dependencies: pip install -r requirements.txt
 7. Copy the config file: cp .env.example .env
 8. Edit .env and update your local settings: with MYSQl DB username, password and the Django secret key
-9. To reveal the Django secret key type: python manage.py shell and then: 
-from decouple import config
-print(config("SECRET_KEY"))
-10. Make migrations: python manage.py makemigrations
-11. Run the migrations: python manage.py migrate
-12. Create local admin user: python manage.py createsuperuser
-13. Start the app server: python manage.py runserver
-14. Enter admin name, password  and email
-15. Register for a demo account on https://dashboard.stripe.com/
-16. Open Developers--> API keys --> copy and paste into the .env file the Publishable key and Secret key
+9. Make migrations: python manage.py makemigrations
+10. Run the migrations: python manage.py migrate
+11. Create local admin user: python manage.py createsuperuser
+12. Start the app server: python manage.py runserver
+13. Enter admin name, password  and email
+14. Register for a demo account on https://dashboard.stripe.com/
+15. Open Developers--> API keys --> copy and paste into the .env file the Publishable key and Secret key
 
 Main app page will be accessed in browser on http://localhost:8000
 Django/system dashboard is accessed on http://localhost:8000/admin
@@ -35,7 +32,6 @@ Users can view their own orders
 Card number: 4242 4242 4242 4242
 Expiration date: any future date (e.g., 12/34)
 CVC: any 3 digits (e.g., 123)
-ZIP: any 5 digits (e.g., 12345)
 
 | Card Type        | Number              | Notes                           |
 | ---------------- | ------------------- |---------------------------------|
