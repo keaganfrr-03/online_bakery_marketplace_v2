@@ -53,6 +53,23 @@ class VendorProfileForm(forms.ModelForm):
         fields = ["company_name", "vendor_id", "phone", "mobile", "delivery_address"]
         labels = {"delivery_address": "Address"}
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+        if user:
+            self.fields["first_name"].initial = user.first_name
+            self.fields["last_name"].initial = user.last_name
+            self.fields["email"].initial = user.email
+            self.user = user
+
+        # Add Bootstrap classes to all fields
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.Select):
+                field.widget.attrs["class"] = "form-select"
+            else:
+                field.widget.attrs["class"] = "form-control"
+
     def save(self, commit=True):
         profile = super().save(commit=False)
         user = profile.user

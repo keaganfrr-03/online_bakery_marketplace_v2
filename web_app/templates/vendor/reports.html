@@ -30,7 +30,6 @@
                         <div class="col-md-6">
                             <label for="period" class="form-label">Time Period:</label>
                             <div class="input-group-icon">
-                                <i class="bi bi-calendar3"></i>
                                 <select name="period" id="period" class="form-select" onchange="this.form.submit()">
                                     <option value="all" {% if period == "all" %}selected{% endif %}>All Time</option>
                                     <option value="day" {% if period == "day" %}selected{% endif %}>Today</option>
@@ -54,7 +53,6 @@
                     <div class="report-header">
                         <div class="report-title">
                             <h4 class="mb-0">
-                                <i class="bi bi-graph-up me-2"></i>
                                 Total Sales
                                 <span class="period-badge">
                                     {% if period == "day" %}Today{% endif %}
@@ -81,30 +79,28 @@
                     <table class="table activity-table sales-table">
                         <thead>
                             <tr>
-                                <th><i class="bi bi-hash me-2"></i>Order #</th>
-                                <th><i class="bi bi-box-seam me-2"></i>Product</th>
-                                <th><i class="bi bi-123 me-2"></i>Quantity</th>
-                                <th><i class="bi bi-tag me-2"></i>Price (Each)</th>
-                                <th><i class="bi bi-currency-dollar me-2"></i>Subtotal</th>
-                                <th><i class="bi bi-calendar-event me-2"></i>Date</th>
+                                <th>Order #</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Price (Each)</th>
+                                <th>Subtotal</th>
+                                <th>Date</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in sales %}
                             <tr class="activity-row">
-                                <td class="order-number">
-                                    <span class="badge-order">#{{ item.order.id }}</span>
+                                <td class="order-number">Order: {{ item.order.id }}
                                 </td>
                                 <td class="product-name">{{ item.product.name }}</td>
                                 <td class="quantity-cell">
-                                    <span class="quantity-badge">{{ item.quantity }}</span>
+                                    {{ item.quantity }}
                                 </td>
                                 <td class="price-cell">R{{ item.price }}</td>
                                 <td class="subtotal-cell">
                                     <strong>R{{ item.subtotal }}</strong>
                                 </td>
                                 <td class="timestamp-cell">
-                                    <i class="bi bi-clock text-muted me-1"></i>
                                     {{ item.order.created_at|date:"Y-m-d H:i" }}
                                 </td>
                             </tr>
@@ -113,7 +109,6 @@
                         <tfoot>
                             <tr class="total-row">
                                 <th colspan="4" class="text-end">
-                                    <i class="bi bi-calculator me-2"></i>
                                     Total
                                     <span class="period-text">
                                         ({% if period == "day" %}Today{% elif period == "week" %}This Week{% elif period == "month" %}This Month{% else %}All Time{% endif %})
@@ -133,9 +128,7 @@
                     <i class="bi bi-inbox"></i>
                     <h4>No Sales Data Available</h4>
                     <p>No sales were found for the selected period. Try choosing a different time range.</p>
-                    <a href="{% url 'vendor_products' %}" class="btn-browse">
-                        <i class="bi bi-box-seam me-2"></i> Manage Products
-                    </a>
+                    <a href="{% url 'vendor_products' %}" class="btn-browse"> Manage Products</a>
                 </div>
             {% endif %}
 

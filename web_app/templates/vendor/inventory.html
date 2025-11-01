@@ -84,7 +84,6 @@
                             <td class="product-name-cell">
                                 <div class="product-info">
                                     <div class="product-icon">
-                                        <i class="bi bi-box"></i>
                                     </div>
                                     <span class="product-name">{{ product.name }}</span>
                                 </div>
@@ -95,30 +94,25 @@
                                     {% elif product.stock_quantity < 5 %}stock-low
                                     {% else %}stock-good
                                     {% endif %}">
-                                    <i class="bi bi-box2 me-1"></i>
                                     {{ product.stock_quantity }} units
                                 </span>
                             </td>
                             <td class="sold-cell">
                                 <span class="sold-count">
-                                    <i class="bi bi-graph-up-arrow me-1"></i>
                                     {{ product.total_sold }} sold
                                 </span>
                             </td>
                             <td class="status-cell">
                                 {% if product.stock_quantity == 0 %}
                                     <span class="status-badge status-out-of-stock">
-                                        <i class="bi bi-x-circle me-1"></i>
                                         Out of Stock
                                     </span>
                                 {% elif product.stock_quantity < 5 %}
                                     <span class="status-badge status-low-stock">
-                                        <i class="bi bi-exclamation-triangle me-1"></i>
                                         Low Stock
                                     </span>
                                 {% else %}
                                     <span class="status-badge status-in-stock">
-                                        <i class="bi bi-check-circle me-1"></i>
                                         In Stock
                                     </span>
                                 {% endif %}

@@ -61,7 +61,7 @@
                     <table class="table activity-table order-history-table">
                         <thead>
                             <tr>
-                                <th><i class="bi bi-hash me-2"></i>Order #</th>
+                                <th>Order #</th>
                                 <th><i class="bi bi-person me-2"></i>Customer</th>
                                 <th><i class="bi bi-box-seam me-2"></i>Items (Your Products)</th>
                                 <th><i class="bi bi-tag me-2"></i>Your Subtotal</th>
@@ -74,19 +74,18 @@
                             {% for order in orders %}
                             <tr class="activity-row order-history-row">
                                 <td class="order-number">
-                                    <span class="badge-order">#{{ order.id }}</span>
+                                    Order: {{ order.id }}
                                 </td>
                                 <td class="customer-name-cell">
-                                    <i class="bi bi-person-circle text-muted me-1"></i>
                                     {{ order.user.username }}
                                 </td>
                                 <td class="items-cell">
                                     <div class="order-items-list">
                                         {% for item in order.vendor_items_list %}
                                             <div class="order-item-row">
-                                                <span class="item-name">{{ item.product.name }}</span>
-                                                <span class="item-quantity">×{{ item.quantity }}</span>
-                                                <span class="item-price">R{{ item.subtotal }}</span>
+                                                {{ item.product.name }}
+                                                {{ item.quantity }} x
+                                                R{{ item.subtotal }}
                                             </div>
                                         {% endfor %}
                                     </div>
@@ -95,7 +94,7 @@
                                     <strong>R{{ order.vendor_subtotal }}</strong>
                                 </td>
                                 <td class="total-cell">
-                                    <span class="global-total">R{{ order.total_price }}</span>
+                                    R{{ order.total_price }}
                                 </td>
                                 <td class="status-cell">
                                     <span class="status-badge
@@ -112,7 +111,6 @@
                                     </span>
                                 </td>
                                 <td class="timestamp-cell">
-                                    <i class="bi bi-clock text-muted me-1"></i>
                                     {{ order.created_at|date:"Y-m-d H:i" }}
                                 </td>
                             </tr>
@@ -156,9 +154,7 @@
                     <i class="bi bi-inbox"></i>
                     <h4>No Order History</h4>
                     <p>You don't have any completed, paid, or cancelled orders yet. Your order history will appear here.</p>
-                    <a href="{% url 'vendor_orders' %}" class="btn-browse">
-                        <i class="bi bi-bag-check me-2"></i> View Active Orders
-                    </a>
+                    <a href="{% url 'vendor_orders' %}" class="btn-browse">View Active Orders</a>
                 </div>
             {% endif %}
 

@@ -252,23 +252,12 @@ def profile_view(request):
         })
 
     else:  # customer
-        if request.method == "POST":
-            form = ProfileForm(request.POST, instance=profile, user=request.user)
-            if form.is_valid():
-                form.save()
-                log_activity(request.user, "Updated Profile", "Customer profile updated", request.META.get("REMOTE_ADDR"))
-                messages.success(request, "Profile updated successfully!")
-                return redirect("profile")
-        else:
-            form = ProfileForm(instance=profile, user=request.user)
-
         # Log viewing profile
         log_activity(request.user, "Viewed Customer Profile", "Customer accessed profile page", request.META.get("REMOTE_ADDR"))
 
         orders = Order.objects.filter(user=request.user).order_by("-created_at")
 
         return render(request, "profile.html", {
-            "form": form,
             "profile": profile,
             "orders": orders,
         })
@@ -284,15 +273,13 @@ def profile_edit(request):
             form.save()
             log_activity(request.user, "Edited Profile", "Customer updated profile details", request.META.get("REMOTE_ADDR"))
             messages.success(request, "Profile updated successfully!")
-            return redirect("profile")
+            return redirect("profile")  # Redirect back to profile view
         else:
             messages.error(request, "Please correct the errors below.")
     else:
         form = ProfileForm(instance=profile, user=request.user)
 
     return render(request, "profile_edit.html", {"form": form, "user": request.user})
-
-
 
 @login_required
 def vendor_edit_profile(request):
