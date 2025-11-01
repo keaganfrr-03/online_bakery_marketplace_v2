@@ -73,14 +73,12 @@
                                 <td class="product-name-cell">
                                     <div class="product-info-simple">
                                         <div class="product-icon-small">
-                                            <i class="bi bi-box"></i>
                                         </div>
                                         <strong>{{ product.name }}</strong>
                                     </div>
                                 </td>
                                 <td class="category-cell">
                                     <span class="category-badge-simple">
-                                        <i class="bi bi-bookmark me-1"></i>
                                         {{ product.category.name }}
                                     </span>
                                 </td>
@@ -104,7 +102,7 @@
 
                 <!-- Action Button -->
                 <div class="text-center mt-4">
-                    <a href="{% url 'add_product' %}" class="btn-add-product">
+                    <a href="{% url 'add_product' %}" class="btn-browse">
                         <i class="bi bi-plus-circle me-2"></i> Add New Product
                     </a>
                 </div>
