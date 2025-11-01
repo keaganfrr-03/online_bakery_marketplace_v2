@@ -76,8 +76,8 @@ class Command(BaseCommand):
             defaults={"email": "info@bakers.co.za", "user_type": "vendor"},
         )
         if created or force:
-            vendor12.set_password("vendorpass")
-            vendor12.save()
+            vendor1.set_password("vendorpass")
+            vendor1.save()
 
         customer1, created = User.objects.get_or_create(
             username="customer1",
@@ -92,8 +92,8 @@ class Command(BaseCommand):
             defaults={"email": "orders@mcdonalds.co.za", "user_type": "customer"},
         )
         if created or force:
-            customer12.set_password("customerpass")
-            customer12.save()
+            customer1.set_password("customerpass")
+            customer1.save()
 
         # === CATEGORIES ===
         categories = ["Cakes", "Breads", "Pastries", "Cookies", "Donuts", "Muffins", "Pizza", "Buns", "Pies",
