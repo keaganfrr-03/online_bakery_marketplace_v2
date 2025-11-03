@@ -433,6 +433,23 @@ def vendor_products(request):
     return render(request, "vendor/vendor_products.html", {"products": products})
 
 
+def product_image_upload_path(instance, filename):
+    """Generate upload path based on product category"""
+    import os
+    import uuid
+    from django.utils.text import slugify
+
+    if instance.category:
+        category_folder = slugify(instance.category.name).replace('-', '_')
+    else:
+        category_folder = 'uncategorized'
+
+    name, ext = os.path.splitext(filename)
+    unique_filename = f'{slugify(name)}_{uuid.uuid4().hex[:8]}{ext}'
+
+    return f'products/{category_folder}/{unique_filename}'
+
+
 @login_required
 def inventory_view(request):
     """View vendor inventory with stock tracking, low-stock prioritized and summary"""

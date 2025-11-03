@@ -59,6 +59,30 @@ class Category(models.Model):
         return self.name
 
 
+def product_image_upload_path(instance, filename):
+    """
+    Generate upload path based on product category.
+    Format: products/{category_slug}/{filename}
+    """
+    import os
+    import uuid
+    from django.utils.text import slugify
+
+    # Get the category name and convert to lowercase slug
+    if instance.category:
+        category_folder = slugify(instance.category.name).replace('-', '_')
+    else:
+        category_folder = 'uncategorized'
+
+    # Generate unique filename to prevent overwrites
+    name, ext = os.path.splitext(filename)
+    unique_filename = f'{slugify(name)}_{uuid.uuid4().hex[:8]}{ext}'
+
+    # Return the path: products/{category}/{unique_filename}
+    return f'products/{category_folder}/{unique_filename}'
+
+
+# Updated Product model - add this to your models.py
 class Product(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
@@ -66,7 +90,10 @@ class Product(models.Model):
     stock_quantity = models.IntegerField()
     availability = models.BooleanField(default=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='products/')
+
+    # Change this line to use the custom upload path
+    image = models.ImageField(upload_to=product_image_upload_path)
+
     vendor = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
 
     def __str__(self):
