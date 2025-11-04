@@ -85,6 +85,31 @@ urlpatterns = [
 
     path("orders/history/print/", print_customer_order_history, name="print_customer_order_history"),
     path("orders/history/download/", download_customer_order_history, name="download_customer_order_history"),
+
+    # Admin Dashboard URLs
+    path("admins/dashboard/", views.admin_dashboard, name="admin_dashboard"),
+    path("admins/products/", views.admin_all_products, name="admin_all_products"),
+    path("admins/vendors/", views.admin_vendors, name="admin_vendors"),
+    path("admins/customers/", views.admin_customers, name="admin_customers"),
+    path("admins/orders/", views.admin_all_orders, name="admin_all_orders"),
+    path("admins/analytics/", views.admin_analytics, name="admin_analytics"),
+    path('admins/reports/', views.admin_reports, name='admin_reports'),
+    path('admins/settings/', views.admin_settings, name='admin_settings'),
+
+    path('vendors/<int:id>/edit/', views.admin_vendor_edit, name='admin_vendor_edit'),
+    path('vendors/<int:id>/delete/', views.admin_vendor_delete, name='admin_vendor_delete'),
+    path('vendors/<int:id>/', views.admin_vendor_detail, name='admin_vendor_detail'),
+
+    # Customers management URLs
+    path('customers/<int:id>/', views.admin_customer_detail, name='admin_customer_detail'),
+    path('customers/<int:id>/edit/', views.admin_customer_edit, name='admin_customer_edit'),
+    path('customers/<int:id>/delete/', views.admin_customer_delete, name='admin_customer_delete'),
+
+    # Admin Categories
+    path('admins/categories/', views.admin_categories, name='admin_categories'),
+    path('admins/category/add/', views.admin_category_add, name='admin_category_add'),
+    path('admins/categories/<int:id>/edit/', views.admin_category_edit, name='admin_category_edit'),
+    path('admins/categories/<int:id>/delete/', views.admin_category_delete, name='admin_category_delete'),
 ]
 
 if settings.DEBUG:

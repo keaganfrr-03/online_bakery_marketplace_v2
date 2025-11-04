@@ -1,4 +1,5 @@
 from decimal import Decimal
+from functools import wraps
 
 from django.contrib.staticfiles import finders
 from django.core.paginator import Paginator
@@ -10,7 +11,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404, render, redirect
 from django.db import transaction
 from django.contrib.auth.models import Group
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -19,11 +20,13 @@ from django import forms
 from django.forms import ModelForm
 from django.http import HttpResponseRedirect, JsonResponse
 from bakery_app.settings import MIN_ORDER_AMOUNT_ZAR
+from .decorators import vendor_required, admin_required
 from .models import CustomUser, Profile, Category, Product, Cart, Order, OrderItem, VendorSettings, ActivityLog
 from .serializers import (
     UserSerializer, ProfileSerializer, CategorySerializer,
     ProductSerializer, CartSerializer, OrderSerializer, OrderItemSerializer)
-from .forms import ProfileForm, VendorProfileForm, VendorSettingsForm, VendorLoginForm
+from .forms import ProfileForm, VendorProfileForm, VendorSettingsForm, VendorLoginForm, VendorForm, CustomerForm, \
+    CategoryForm
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from django.db.models.signals import post_save
@@ -42,6 +45,8 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 import os
+import uuid
+from django.utils.text import slugify
 
 
 logger = logging.getLogger('portal')
@@ -337,7 +342,7 @@ class ProductForm(ModelForm):
 @login_required
 def vendor_dash(request):
     """Vendor dashboard showing their products"""
-    if request.user.user_type != "vendor":
+    if request.user.user_type != "vendor" and request.user.user_type != "admin":
         messages.error(request, "You don't have permission to view this page.")
         return redirect("index")
 
@@ -349,7 +354,7 @@ def vendor_dash(request):
 def add_product(request):
     if request.user.user_type != "vendor":
         messages.error(request, "Only vendors can add products.")
-        log_activity(request.user, "Unauthorized add_product attempt", request=request)
+        log_activity(request.user, "Unauthorized add_product attempt")
         return redirect("index")
 
     if request.method == "POST":
@@ -435,9 +440,6 @@ def vendor_products(request):
 
 def product_image_upload_path(instance, filename):
     """Generate upload path based on product category"""
-    import os
-    import uuid
-    from django.utils.text import slugify
 
     if instance.category:
         category_folder = slugify(instance.category.name).replace('-', '_')
@@ -528,6 +530,16 @@ class CartViewSet(viewsets.ModelViewSet):
 def add_to_cart(request, product_id):
     """Add product to cart from product page"""
     if request.method == "POST":
+        # ✅ Prevent admin and vendor from adding to cart
+        if request.user.is_authenticated and request.user.user_type in ['admin', 'vendor']:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'error': True,
+                    'message': 'Admins and vendors cannot purchase products.'
+                }, status=403)
+            messages.error(request, 'Admins and vendors cannot purchase products.')
+            return redirect('index')
+
         qty = int(request.POST.get("qty", 1))
 
         if request.user.is_authenticated:
@@ -550,7 +562,7 @@ def add_to_cart(request, product_id):
                     "message": f'"{product.name}" added to cart!',
                     "quantity": cart_item.quantity,
                     "product_id": product.id,
-                    "cart_count": cart_count  # ✅ Include cart count
+                    "cart_count": cart_count
                 })
 
             # Normal form submission: redirect back
@@ -577,6 +589,12 @@ def add_to_cart(request, product_id):
 def update_cart(request):
     """Update cart quantities or remove items"""
     if request.method == "POST" and request.user.is_authenticated:
+        # ✅ Prevent admin and vendor from updating cart
+        if request.user.user_type in ['admin', 'vendor']:
+            return JsonResponse({
+                "error": "Admins and vendors cannot modify cart."
+            }, status=403)
+
         product_id = request.POST.get("product_id")
         quantity = int(request.POST.get("quantity", 0))
 
@@ -602,6 +620,12 @@ def update_cart(request):
 def cart_view(request):
     """Display and manage shopping cart"""
     user = request.user
+
+    # ✅ Redirect admin and vendor away from cart page
+    if user.user_type in ['admin', 'vendor']:
+        messages.warning(request, 'Admins and vendors cannot access the shopping cart.')
+        return redirect('index')
+
     profile, _ = Profile.objects.get_or_create(user=user)
 
     # Handle quantity changes
@@ -618,6 +642,7 @@ def cart_view(request):
             if action == "increment":
                 if cart_item.quantity < product.stock_quantity:
                     cart_item.quantity += 1
+                    cart_item.save()
                 else:
                     messages.warning(request, f"Cannot add more. Only {product.stock_quantity} in stock.")
             elif action == "decrement":
@@ -669,6 +694,11 @@ def cart_view(request):
 @login_required(login_url='/accounts/login/')
 def remove_from_cart(request, product_id):
     """Remove specific item from cart"""
+    # ✅ Prevent admin and vendor from removing cart items
+    if request.user.user_type in ['admin', 'vendor']:
+        messages.error(request, 'Admins and vendors cannot modify cart.')
+        return redirect('index')
+
     cart_item = Cart.objects.filter(user=request.user, product_id=product_id).first()
     if cart_item:
         cart_item.delete()
@@ -676,7 +706,6 @@ def remove_from_cart(request, product_id):
     else:
         messages.error(request, "Item not found in your cart.")
     return redirect("cart")
-
 
 # ORDER MANAGEMENT
 # Functions for creating and managing orders
@@ -829,7 +858,7 @@ def customer_orders(request):
     return render(request, "customer_orders.html", {"orders": orders})
 
 
-@login_required
+@vendor_required
 def order_history_view(request):
     """View order history for both customers and vendors"""
     if request.user.user_type == "customer":
@@ -1736,14 +1765,16 @@ def stripe_success(request, order_id):
     return render(request, "success.html", {"order": order})
 
 
-@login_required
+@admin_required
 def activity_log_view(request):
-    if request.user.user_type != "vendor":
+    if request.user.user_type != "admin":
         messages.error(request, "Access denied.")
         return redirect("index")
 
-    logs = ActivityLog.objects.filter(user=request.user).order_by('-timestamp')[:100]
-    return render(request, "vendor/activity_logs.html", {"logs": logs})
+    # Fetch last 100 logs, with related user to avoid extra queries
+    logs = ActivityLog.objects.select_related('user', 'user__profile').order_by('-timestamp')[:100]
+
+    return render(request, "admins/activity_logs.html", {"logs": logs})
 
 
 def handle_paypal_payment(request, order):
@@ -1762,3 +1793,190 @@ def handle_paypal_payment(request, order):
         'alternative_methods': ['card', 'cash']
     }, status=400)
 
+
+# Admin Dashboard
+@admin_required
+def admin_dashboard(request):
+    total_products = Product.objects.count()
+    total_vendors = CustomUser.objects.filter(user_type="vendor").count()
+    total_customers = CustomUser.objects.filter(user_type="customer").count()
+
+    context = {
+        "total_products": total_products,
+        "total_vendors": total_vendors,
+        "total_customers": total_customers,
+    }
+    return render(request, "admins/admin_dashboard.html", context)
+
+
+# Admin Profile: View all products
+@admin_required
+def admin_all_products(request):
+    products = Product.objects.select_related("vendor", "category").all()
+    return render(request, "admins/admin_all_products.html", {"products": products})
+
+
+# Admin: Manage Vendors
+@admin_required
+def admin_vendors(request):
+    vendors = CustomUser.objects.filter(user_type="vendor")
+    return render(request, "admins/admin_vendors.html", {"vendors": vendors})
+
+
+# Admin: Manage Customers
+@admin_required
+def admin_customers(request):
+    customers = CustomUser.objects.filter(user_type="customer")
+    return render(request, "admins/admin_customers.html", {"customers": customers})
+
+
+# Admin: Categories
+@admin_required
+def admin_categories(request):
+    admin_categories = Category.objects.all()
+    return render(request, "admins/admin_categories.html", {"categories": admin_categories})
+
+
+def admin_required(view_func):
+    return user_passes_test(lambda u: u.is_authenticated and u.user_type == "admin")(view_func)
+
+
+@admin_required
+def admin_all_orders(request):
+    return render(request, "admins/admin_all_orders.html")
+
+
+@admin_required
+def admin_analytics(request):
+    # Example context — you can add real analytics later
+    context = {
+        "total_products": 100,
+        "total_orders": 50,
+        "total_customers": 25,
+    }
+    return render(request, "admins/admin_analytics.html", context)
+
+
+@admin_required
+def admin_reports(request):
+    # Replace with actual report logic later
+    context = {}
+    return render(request, "admins/admin_reports.html", context)
+
+
+@admin_required
+def admin_settings(request):
+    # Replace with real settings logic later
+    context = {}
+    return render(request, "admins/admin_settings.html", context)
+
+
+# View Vendor Details
+@admin_required
+def admin_vendor_detail(request, id):
+    vendor = get_object_or_404(CustomUser, id=id, user_type="vendor")
+    return render(request, "admins/admin_vendor_detail.html", {"vendor": vendor})
+
+
+# Edit Vendor
+@admin_required
+def admin_vendor_edit(request, id):
+    vendor = get_object_or_404(CustomUser, id=id, user_type="vendor")
+    if request.method == "POST":
+        form = VendorForm(request.POST, instance=vendor)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Vendor {vendor.username} updated successfully.")
+            return redirect("admin_vendors")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = VendorForm(instance=vendor)
+    return render(request, "admins/admin_vendor_edit.html", {"form": form, "vendor": vendor})
+
+
+
+# Delete Vendor
+@admin_required
+def admin_vendor_delete(request, id):
+    vendor = get_object_or_404(CustomUser, id=id, user_type="vendor")
+    if request.method == "POST":
+        vendor.delete()
+        messages.success(request, f"Vendor {vendor.username} deleted successfully.")
+        return redirect("admin_vendors")
+    return render(request, "admins/admin_vendor_delete_confirm.html", {"vendor": vendor})
+
+
+# Admin: Customer detail
+@admin_required
+def admin_customer_detail(request, id):
+    customer = CustomUser.objects.get(id=id, user_type="customer")
+    return render(request, "admins/admin_customer_detail.html", {"customer": customer})
+
+
+# Admin: Edit customer
+@admin_required
+def admin_customer_edit(request, id):
+    customer = CustomUser.objects.get(id=id, user_type="customer")
+    if request.method == "POST":
+        form = CustomerForm(request.POST, instance=customer)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Customer updated successfully.")
+            return redirect("admin_customers")
+    else:
+        form = CustomerForm(instance=customer)
+    return render(request, "admins/admin_customer_edit.html", {"form": form, "customer": customer})
+
+
+# Admin: Delete customer
+@admin_required
+def admin_customer_delete(request, id):
+    customer = CustomUser.objects.get(id=id, user_type="customer")
+    if request.method == "POST":
+        customer.delete()
+        messages.success(request, "Customer deleted successfully.")
+        return redirect("admin_customers")
+    return render(request, "admins/admin_customer_delete.html", {"customer": customer})
+
+
+# List categories
+
+
+
+# Add new category
+@admin_required
+def admin_category_add(request):
+    if request.method == "POST":
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Category added successfully")
+            return redirect("admin_categories")
+    else:
+        form = CategoryForm()
+    return render(request, "admins/admin_category_form.html", {"form": form, "title": "Add Category"})
+
+
+# Edit category
+@admin_required
+def admin_category_edit(request, id):
+    category = get_object_or_404(Category, id=id)
+    if request.method == "POST":
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Category updated successfully")
+            return redirect("admin_categories")
+    else:
+        form = CategoryForm(instance=category)
+    return render(request, "admins/admin_category_form.html", {"form": form, "title": "Edit Category"})
+
+
+# Delete category
+@admin_required
+def admin_category_delete(request, id):
+    category = get_object_or_404(Category, id=id)
+    category.delete()
+    messages.success(request, "Category deleted successfully")
+    return redirect("admin_categories")

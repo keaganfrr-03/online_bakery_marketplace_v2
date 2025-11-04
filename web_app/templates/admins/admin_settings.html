@@ -1,0 +1,74 @@
+{% extends "admins/base_admin.html" %}
+{% load static %}
+
+{% block title %}Admin Settings{% endblock %}
+
+{% block admin_content %}
+
+<div class="admin-header">
+    <h2><i class="bi bi-gear-fill me-2"></i>Settings</h2>
+    <p>Manage site configurations and admin preferences</p>
+</div>
+
+<!-- General Settings Form -->
+<div class="admin-card mb-4 p-4">
+    <form method="post">
+        {% csrf_token %}
+        <h5>General Settings</h5>
+        <div class="row g-3 mt-2">
+            <div class="col-md-6">
+                <label for="site_name" class="form-label">Site Name</label>
+                <input type="text" class="form-control" id="site_name" name="site_name" value="{{ settings.site_name|default:'' }}">
+            </div>
+            <div class="col-md-6">
+                <label for="site_email" class="form-label">Admin Email</label>
+                <input type="email" class="form-control" id="site_email" name="site_email" value="{{ settings.site_email|default:'' }}">
+            </div>
+            <div class="col-md-12">
+                <label for="site_description" class="form-label">Site Description</label>
+                <textarea class="form-control" id="site_description" name="site_description" rows="3">{{ settings.site_description|default:'' }}</textarea>
+            </div>
+        </div>
+
+        <!-- Save button -->
+        <div class="mt-4">
+            <button type="submit" class="btn btn-admin-primary">
+                <i class="bi bi-save me-2"></i>Save Settings
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Admin Account Settings -->
+<div class="admin-card mb-4 p-4">
+    <h5>Admin Account</h5>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row g-3 mt-2">
+            <div class="col-md-6">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" value="{{ admin.username }}">
+            </div>
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ admin.email }}">
+            </div>
+            <div class="col-md-6">
+                <label for="password" class="form-label">New Password</label>
+                <input type="password" class="form-control" id="password" name="password">
+            </div>
+            <div class="col-md-6">
+                <label for="password_confirm" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="password_confirm" name="password_confirm">
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-admin-primary">
+                <i class="bi bi-save me-2"></i>Update Account
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "admins/base_admin.html" %}
+{% load static %}
+
+{% block title %}All Vendors - Admin{% endblock %}
+
+{% block admin_content %}
+
+<div class="admin-header">
+    <h2><i class="bi bi-shop me-2"></i>All Vendors</h2>
+    <p>View and manage all registered vendors</p>
+</div>
+
+<div class="admin-table">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vendor in vendors %}
+            <tr>
+                <td>#{{ vendor.id }}</td>
+                <td>{{ vendor.username }}</td>
+                <td>{{ vendor.email }}</td>
+                <td>
+                    {% if vendor.is_active %}
+                        <span class="badge admin-badge active">Active</span>
+                    {% else %}
+                        <span class="badge admin-badge inactive">Inactive</span>
+                    {% endif %}
+                </td>
+                <td>{{ vendor.date_joined|date:"d M Y" }}</td>
+                <td>
+                    <div class="admin-action-icons">
+                        <!-- View Vendor Details -->
+                        <a href="{% url 'admin_vendor_detail' vendor.id %}" class="btn-view" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <!-- Edit Vendor -->
+                        <a href="{% url 'admin_vendor_edit' vendor.id %}" class="btn-edit" title="Edit Vendor">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <!-- Delete Vendor -->
+                        <a href="{% url 'admin_vendor_delete' vendor.id %}" class="btn-delete" title="Delete Vendor">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">No vendors found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
