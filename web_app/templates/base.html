@@ -58,8 +58,8 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
 
                 {% if user.is_authenticated %}
+                    {# ✅ Cart - Only show for customers #}
                     {% if user.user_type == "customer" %}
-                        <!-- Cart with badge -->
                         <li class="nav-item">
                             <a class="nav-link position-relative" href="{% url 'cart' %}">
                                 <i class="bi bi-cart"></i> Cart
@@ -72,7 +72,19 @@
                             </a>
                         </li>
                     {% elif user.user_type == "vendor" %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'vendor_dash' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        {# ✅ Dashboard link for vendors #}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'vendor_dash' %}">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                    {% elif user.user_type == "admin" %}
+                        {# ✅ Dashboard link for admins - redirects to admin dashboard #}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin_dashboard' %}">
+                                <i class="bi bi-shield-check"></i> Admin Dashboard
+                            </a>
+                        </li>
                     {% endif %}
 
                     <!-- User Dropdown -->
@@ -83,13 +95,13 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> My Account</a></li>
 
+                            {# ✅ Customer-only menu items #}
                             {% if user.user_type == "customer" %}
                                 <li><a class="dropdown-item" href="{% url 'customer_orders' %}"><i class="bi bi-bag"></i> My Orders</a></li>
                                 <li><a class="dropdown-item" href="{% url 'customer_order_history' %}"><i class="bi bi-clock-history"></i> Order History</a></li>
-                            {% elif user.user_type == "vendor" %}
-                                <li><a class="dropdown-item" href="{% url 'reports' %}"><i class="bi bi-graph-up-arrow me-2"></i> Reports</a></li>
-                                <li><a class="dropdown-item" href="{% url 'settings' %}"><i class="bi bi-gear me-2"></i> Settings</a></li>
                             {% endif %}
+
+                            {# ✅ Removed Reports and Settings from dropdown - they're in vendor sidebar #}
 
                             <li><hr class="dropdown-divider"></li>
                             <li>
@@ -104,6 +116,7 @@
                     </li>
 
                 {% else %}
+                    {# ✅ Guest users see login/register #}
                     <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
                 {% endif %}

@@ -20,6 +20,14 @@
         height: 150px;
     }
 }
+
+/* Style for disabled button */
+.btn-disabled-custom {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
 </style>
 
 <div id="snackbar" class="success">
@@ -37,10 +45,23 @@
                 <h5 class="card-title">{{ product.name }}</h5>
                 <p class="card-text text-truncate">{{ product.description }}</p>
                 <p class="fw-bold">R{{ product.price|floatformat:2 }}</p>
-                <form method="post" action="{% url 'add_to_cart' product.id %}" data-action="{% url 'add_to_cart' product.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary mt-auto">Add to Cart</button>
-                </form>
+
+                {% if user.is_authenticated and user.user_type in 'admin,vendor' %}
+                    <!-- Disabled button for admin/vendor -->
+                    <button type="button" class="btn btn-disabled-custom mt-auto" disabled>
+                        {% if user.user_type == 'vendor' %}
+                            Vendors View Only
+                        {% else %}
+                            Admin View Only
+                        {% endif %}
+                    </button>
+                {% else %}
+                    <!-- Active Add to Cart button for customers and anonymous users -->
+                    <form method="post" action="{% url 'add_to_cart' product.id %}" data-action="{% url 'add_to_cart' product.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary mt-auto">Add to Cart</button>
+                    </form>
+                {% endif %}
             </div>
         </div>
     </div>

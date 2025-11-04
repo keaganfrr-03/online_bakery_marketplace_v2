@@ -84,6 +84,7 @@ def product_image_upload_path(instance, filename):
 
 # Updated Product model - add this to your models.py
 class Product(models.Model):
+    objects = None
     name = models.CharField(max_length=100)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -164,7 +165,10 @@ class VendorSettings(models.Model):
 
 class ActivityLog(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
     action = models.CharField(max_length=255)
     details = models.TextField(blank=True, null=True)

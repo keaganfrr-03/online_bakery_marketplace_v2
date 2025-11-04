@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 
-from .models import Profile
+from .models import Profile, CustomUser, Category
 
 
 class ProfileForm(forms.ModelForm):
@@ -88,6 +88,7 @@ class VendorSettingsForm(forms.Form):
         initial="R",
         label="Default Currency"
     )
+
     low_stock_threshold = forms.IntegerField(
         initial=5, label="Low Stock Alert (Qty)"
     )
@@ -112,3 +113,39 @@ class VendorLoginForm(AuthenticationForm):
             attrs={"class": "form-control", "placeholder": "Enter Vendor ID"}
         ),
     )
+
+
+class VendorForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ["username", "email", "is_active"]
+        widgets = {
+            "username": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+
+class CustomerForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'first_name', 'last_name', 'is_active']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Category Name'
+            }),
+        }
