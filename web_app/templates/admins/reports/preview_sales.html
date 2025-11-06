@@ -1,0 +1,21 @@
+{% extends "admins/base_admin.html" %}
+{% block title %}Sales Report Preview{% endblock %}
+{% block admin_content %}
+<h2><i class="bi bi-cart-check me-2"></i>Sales Report</h2>
+<p>Showing orders from {{ start_date }} to {{ end_date }}</p>
+
+<table class="table table-bordered">
+    <thead><tr><th>Order #</th><th>Customer</th><th>Date</th><th>Total</th></tr></thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>{{ order.user.username }}</td>
+            <td>{{ order.created_at|date:"Y-m-d" }}</td>
+            <td>R{{ order.total_price }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p><strong>Total Sales:</strong> R{{ total_sales|floatformat:2 }}</p>
+{% endblock %}
