@@ -10,7 +10,7 @@ from web_app.views import (
     sales_view, order_history_view, product_search, product_detail, mark_order_paid, customer_orders_view,
     vendor_orders_view, update_order_status, vendor_order_history, customer_order_history, create_checkout_session,
     success, cancel, customer_dashboard, stripe_webhook, activity_log_view, download_customer_order_history,
-    print_customer_order_history)
+    print_customer_order_history, vendor_reports_view, vendor_orders)
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import render
@@ -63,7 +63,8 @@ urlpatterns = [
     path("inventory/", inventory_view, name="inventory"),
     # Orders
     path("customer/orders", customer_orders_view, name="customer_orders"),
-    path("vendor/orders", vendor_orders_view, name="vendor_orders"),
+    path("vendor/orders", vendor_orders, name="vendor_orders"),
+    path("vendor/orders_view", vendor_orders_view, name="vendor_orders_view"),
 
     path("customers/", customer_list, name="customer_list"),
     path("reports/", reports_view, name="reports"),
@@ -72,6 +73,9 @@ urlpatterns = [
     path("products/", product_list, name="product_list"),
     path("vendor/products/", vendor_products, name="vendor_products"),
     path("vendor/sales/", sales_view, name="sales"),
+    path("vendor/reports/", vendor_reports_view, name="vendor_reports"),
+    path('vendor/reports/pdf/', views.vendor_reports_pdf_view, name='vendor_reports_pdf'),
+
 
     path("search/", product_search, name="product_search"),
     path("product/<int:product_id>/", product_detail, name="product_detail"),
@@ -88,28 +92,50 @@ urlpatterns = [
 
     # Admin Dashboard URLs
     path("admins/dashboard/", views.admin_dashboard, name="admin_dashboard"),
-    path("admins/products/", views.admin_all_products, name="admin_all_products"),
     path("admins/vendors/", views.admin_vendors, name="admin_vendors"),
     path("admins/customers/", views.admin_customers, name="admin_customers"),
-    path("admins/orders/", views.admin_all_orders, name="admin_all_orders"),
     path("admins/analytics/", views.admin_analytics, name="admin_analytics"),
     path('admins/reports/', views.admin_reports, name='admin_reports'),
     path('admins/settings/', views.admin_settings, name='admin_settings'),
+    path('admins/settings/backup/', views.admin_backup, name='admin_backup'),
+    path('admins/settings/localization/', views.admin_update_localization, name='admin_update_localization'),
+    path('admins/settings/account/', views.admin_update_account, name='admin_update_account'),
+
+
+
+    # Admin Products
+    path("admins/products/", views.admin_all_products, name="admin_all_products"),
+    path("admins/products/<int:id>/view/", views.admin_product_detail, name="admin_product_detail"),
+    path("admins/products/<int:id>/edit/", views.admin_product_edit, name="admin_product_edit"),
+    path("admins/products/<int:id>/delete/", views.admin_product_delete, name="admin_product_delete"),
+
 
     path('vendors/<int:id>/edit/', views.admin_vendor_edit, name='admin_vendor_edit'),
     path('vendors/<int:id>/delete/', views.admin_vendor_delete, name='admin_vendor_delete'),
     path('vendors/<int:id>/', views.admin_vendor_detail, name='admin_vendor_detail'),
 
     # Customers management URLs
-    path('customers/<int:id>/', views.admin_customer_detail, name='admin_customer_detail'),
-    path('customers/<int:id>/edit/', views.admin_customer_edit, name='admin_customer_edit'),
-    path('customers/<int:id>/delete/', views.admin_customer_delete, name='admin_customer_delete'),
+    path('admins/customers/<int:id>/', views.admin_customer_detail, name='admin_customer_detail'),
+    path('admins/customers/<int:id>/edit/', views.admin_customer_edit, name='admin_customer_edit'),
+    path('admins/customers/<int:id>/delete/', views.admin_customer_delete, name='admin_customer_delete'),
 
     # Admin Categories
     path('admins/categories/', views.admin_categories, name='admin_categories'),
     path('admins/category/add/', views.admin_category_add, name='admin_category_add'),
     path('admins/categories/<int:id>/edit/', views.admin_category_edit, name='admin_category_edit'),
     path('admins/categories/<int:id>/delete/', views.admin_category_delete, name='admin_category_delete'),
+
+    # Admin Reports
+    path('admins/reports/', views.admin_reports, name='admin_reports'),
+    path('admins/reports/<str:report_id>/view/', views.admin_report_view, name='admin_report_view'),
+    path('admins/reports/<str:report_id>/download/', views.admin_report_download, name='admin_report_download'),
+    path('admins/reports/<str:report_id>/delete/', views.admin_report_delete, name='admin_report_delete'),
+
+    # Admin Orders
+    path("admins/orders/", views.admin_all_orders, name="admin_all_orders"),
+    path('admins/orders/<int:id>/', views.admin_order_detail, name='admin_order_detail'),
+    path('admins/orders/<int:id>/edit/', views.admin_order_edit, name='admin_order_edit'),
+    path('admins/orders/<int:id>/delete/', views.admin_order_delete, name='admin_order_delete')
 ]
 
 if settings.DEBUG:

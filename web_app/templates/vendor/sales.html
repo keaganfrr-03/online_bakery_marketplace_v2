@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/vendor.css' %}">
+
 {% endblock %}
 
 {% block vendor_content %}
@@ -39,9 +40,9 @@
             </div>
             <div class="card-content">
                 <h6>Total Sales</h6>
-                <p class="card-value">R{{ total_sales }}</p>
-                <small class="card-change positive">
-                    <i class="bi bi-arrow-up"></i> {{ sales_change_percent }}%
+                <p class="card-value">R{{ total_sales|floatformat:2 }}</p>
+                <small class="card-change {% if sales_change_percent >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="bi bi-arrow-{% if sales_change_percent >= 0 %}up{% else %}down{% endif %}"></i> {{ sales_change_percent }}%
                 </small>
             </div>
         </div>
@@ -54,9 +55,9 @@
             </div>
             <div class="card-content">
                 <h6>Total Orders</h6>
-                <p class="card-value">{{ sales_month|floatformat:0 }}</p>
-                <small class="card-change positive">
-                    <i class="bi bi-arrow-up"></i> {{ sales_change_percent }}%
+                <p class="card-value">{{ total_orders }}</p>
+                <small class="card-change {% if orders_change_percent >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="bi bi-arrow-{% if orders_change_percent >= 0 %}up{% else %}down{% endif %}"></i> {{ orders_change_percent }}%
                 </small>
             </div>
         </div>
@@ -69,9 +70,9 @@
             </div>
             <div class="card-content">
                 <h6>Average Sale</h6>
-                <p class="card-value">R{{ avg_sale }}</p>
+                <p class="card-value">R{{ avg_sale|floatformat:2 }}</p>
                 <small class="card-change positive">
-                    <i class="bi bi-arrow-up"></i> {{ sales_change_percent }}%
+                    <i class="bi bi-calculator"></i> Per Order
                 </small>
             </div>
         </div>
@@ -85,8 +86,8 @@
             <div class="card-content">
                 <h6>Growth Rate</h6>
                 <p class="card-value">{{ growth_rate }}%</p>
-                <small class="card-change positive">
-                    <i class="bi bi-arrow-up"></i> {{ sales_change_percent }}%
+                <small class="card-change {% if growth_rate >= 0 %}positive{% else %}negative{% endif %}">
+                    <i class="bi bi-arrow-{% if growth_rate >= 0 %}up{% else %}down{% endif %}"></i> vs Previous
                 </small>
             </div>
         </div>
@@ -96,7 +97,7 @@
 <!-- Charts Section -->
 <div class="row g-4">
     <div class="col-md-6">
-        <div class="profile-card chart-card">
+        <div class="chart-card">
             <div class="chart-header">
                 <h5><i class="bi bi-pie-chart me-2"></i>Sales by Category</h5>
                 <span class="chart-badge">Line Chart</span>
@@ -108,9 +109,9 @@
     </div>
 
     <div class="col-md-6">
-        <div class="profile-card chart-card">
+        <div class="chart-card">
             <div class="chart-header">
-                <h5><i class="bi bi-bar-chart me-2"></i>Sales per Product</h5>
+                <h5><i class="bi bi-bar-chart me-2"></i>Top Products</h5>
                 <span class="chart-badge">Bar Chart</span>
             </div>
             <div class="chart-container">
@@ -123,16 +124,6 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Chart.js default colors matching the theme
-const brandColors = {
-    primary: '#8b4d23',
-    secondary: '#5C3317',
-    success: '#10b981',
-    warning: '#f59e0b',
-    danger: '#ef4444',
-    info: '#3b82f6'
-};
-
 // Category Chart (Line)
 const ctxCategory = document.getElementById('categoryChart').getContext('2d');
 new Chart(ctxCategory, {
@@ -143,27 +134,26 @@ new Chart(ctxCategory, {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         plugins: {
             legend: {
-                display: true,
-                position: 'bottom',
-                labels: {
-                    padding: 15,
-                    font: { size: 12, weight: '600' },
-                    color: '#333'
-                }
+                display: false
             },
             tooltip: {
                 mode: 'index',
                 intersect: false,
-                backgroundColor: 'rgba(139, 77, 35, 0.9)',
+                backgroundColor: 'rgba(139, 77, 35, 0.95)',
                 titleColor: '#fff',
                 bodyColor: '#fff',
                 borderColor: '#8b4d23',
-                borderWidth: 1,
+                borderWidth: 2,
                 padding: 12,
-                displayColors: true
+                displayColors: true,
+                callbacks: {
+                    label: function(context) {
+                        return 'R' + context.parsed.y.toFixed(2);
+                    }
+                }
             }
         },
         interaction: {
@@ -173,12 +163,17 @@ new Chart(ctxCategory, {
         scales: {
             y: {
                 beginAtZero: true,
-                grid: { color: '#f5ebe0' },
-                ticks: { color: '#6c757d', font: { size: 11 } }
+                grid: { color: 'rgba(0,0,0,0.05)' },
+                ticks: {
+                    color: '#6c757d',
+                    callback: function(value) {
+                        return 'R' + value;
+                    }
+                }
             },
             x: {
-                grid: { color: '#f5ebe0' },
-                ticks: { color: '#6c757d', font: { size: 11 } }
+                grid: { display: false },
+                ticks: { color: '#6c757d' }
             }
         }
     }
@@ -194,42 +189,45 @@ new Chart(ctxProduct, {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         plugins: {
             legend: {
-                display: true,
-                position: 'bottom',
-                labels: {
-                    padding: 15,
-                    font: { size: 12, weight: '600' },
-                    color: '#333'
-                }
+                display: false
             },
             tooltip: {
                 mode: 'index',
                 intersect: false,
-                backgroundColor: 'rgba(139, 77, 35, 0.9)',
+                backgroundColor: 'rgba(139, 77, 35, 0.95)',
                 titleColor: '#fff',
                 bodyColor: '#fff',
                 borderColor: '#8b4d23',
-                borderWidth: 1,
+                borderWidth: 2,
                 padding: 12,
-                displayColors: true
+                callbacks: {
+                    label: function(context) {
+                        return 'R' + context.parsed.y.toFixed(2);
+                    }
+                }
             }
-        },
-        interaction: {
-            mode: 'nearest',
-            intersect: false
         },
         scales: {
             y: {
                 beginAtZero: true,
-                grid: { color: '#f5ebe0' },
-                ticks: { color: '#6c757d', font: { size: 11 } }
+                grid: { color: 'rgba(0,0,0,0.05)' },
+                ticks: {
+                    color: '#6c757d',
+                    callback: function(value) {
+                        return 'R' + value;
+                    }
+                }
             },
             x: {
-                grid: { color: '#f5ebe0' },
-                ticks: { color: '#6c757d', font: { size: 11 } }
+                grid: { display: false },
+                ticks: {
+                    color: '#6c757d',
+                    maxRotation: 45,
+                    minRotation: 45
+                }
             }
         }
     }

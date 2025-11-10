@@ -1232,3 +1232,123 @@ body {
     flex: 1;
 }
 
+.period-filter-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-label {
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.btn-period {
+    padding: 8px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    color: #6c757d;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn-period:hover {
+    border-color: #8b4d23;
+    color: #8b4d23;
+    background: #f5ebe0;
+}
+
+.btn-period.active {
+    border-color: #8b4d23;
+    background: #8b4d23;
+    color: white;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+
+.card-sales .card-icon { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.card-orders .card-icon { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.card-average .card-icon { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.card-growth .card-icon { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+
+.card-content h6 {
+    margin: 0;
+    font-size: 14px;
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.card-value {
+    margin: 5px 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.card-change {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.card-change.positive {
+    color: #10b981;
+}
+
+.card-change.negative {
+    color: #ef4444;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chart-header h5 {
+    margin: 0;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.chart-badge {
+    background: #f5ebe0;
+    color: #8b4d23;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;

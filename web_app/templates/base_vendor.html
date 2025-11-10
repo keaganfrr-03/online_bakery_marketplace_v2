@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="{% static 'css/vendor.css' %}">
 {% endblock %}
 
-{# ✅ Override base.html's container wrapper #}
+{# Override base.html's container wrapper #}
 {% block content_wrapper %}
 <div class="row g-0">
     <!-- Sidebar -->
@@ -33,57 +33,38 @@
                     <i class="bi bi-cart-check me-2"></i> Pending Orders
                 </a>
             </li>
-
-            {# ✅ Vendor only - Order History #}
-            {% if user.user_type == 'vendor' %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'vendor_order_history' %}">
                     <i class="bi bi-clock-history me-2"></i> Order History
                 </a>
             </li>
-            {% endif %}
-
-            {# ✅ Vendor only - Customer List #}
-            {% if user.user_type == 'vendor' %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'customer_list' %}">
                     <i class="bi bi-people me-2"></i> Customer List
                 </a>
             </li>
-            {% endif %}
-
-            {# ✅ Vendor only - Sales #}
-            {% if user.user_type == 'vendor' %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'sales' %}">
                     <i class="bi bi-cash-coin me-2"></i> Sales
                 </a>
             </li>
-            {% endif %}
         </ul>
 
         <h6 class="px-3 mt-4 mb-2 text-muted text-uppercase small">Maintenance</h6>
         <ul class="nav flex-column mb-2">
-            {# ✅ Vendor only - Reports #}
-            {% if user.user_type == 'vendor' %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'reports' %}">
                     <i class="bi bi-graph-up-arrow me-2"></i> Reports
                 </a>
             </li>
-            {% endif %}
-
-            {# ✅ Vendor only - Vendor Profile #}
-            {% if user.user_type == 'vendor' %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'vendor_profile' %}">
                     <i class="bi bi-person-badge me-2"></i> Vendor Profile
                 </a>
             </li>
-            {% endif %}
 
-            {# ✅ Admin only - Activity Logs #}
-            {% if user.user_type == 'admin' %}
+            {# Admin only - Activity Logs #}
+            {% if request.user.is_staff or request.user.is_superuser %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'vendor_activity_logs' %}">
                     <i class="bi bi-list-check me-2"></i> Activity Logs
@@ -91,21 +72,18 @@
             </li>
             {% endif %}
 
-            {# ✅ Vendor only - Settings #}
-            {% if user.user_type == 'vendor' %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'settings' %}">
                     <i class="bi bi-gear me-2"></i> Settings
                 </a>
             </li>
-            {% endif %}
         </ul>
         {% endblock %}
     </div>
 
     <!-- Page Content -->
     <div class="content-area vendor">
-        <div class="container-fluid px-4">   {# ✅ add container wrapper #}
+        <div class="container-fluid px-4">   {# add container wrapper #}
             {% block vendor_content %}{% endblock %}
         </div>
     </div>

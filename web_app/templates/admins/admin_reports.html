@@ -14,12 +14,15 @@
 <div class="admin-chart-container mb-4">
     <form method="get" class="row g-3">
         <div class="col-md-3">
-            <input type="date" name="start_date" class="form-control" placeholder="Start Date" value="{{ request.GET.start_date }}">
+            <label class="form-label small">Start Date</label>
+            <input type="date" name="start_date" class="form-control" value="{{ request.GET.start_date }}">
         </div>
         <div class="col-md-3">
-            <input type="date" name="end_date" class="form-control" placeholder="End Date" value="{{ request.GET.end_date }}">
+            <label class="form-label small">End Date</label>
+            <input type="date" name="end_date" class="form-control" value="{{ request.GET.end_date }}">
         </div>
         <div class="col-md-3">
+            <label class="form-label small">Report Type</label>
             <select name="report_type" class="form-select">
                 <option value="">All Reports</option>
                 <option value="sales" {% if request.GET.report_type == 'sales' %}selected{% endif %}>Sales</option>
@@ -28,6 +31,7 @@
             </select>
         </div>
         <div class="col-md-3">
+            <label class="form-label small">&nbsp;</label>
             <button type="submit" class="btn btn-admin-primary w-100">
                 <i class="bi bi-funnel me-2"></i>Filter
             </button>
@@ -39,20 +43,29 @@
 <div class="admin-stats-grid mb-4">
     <div class="admin-card primary">
         <div class="card-icon"><i class="bi bi-cart-check"></i></div>
-        <h3>{{ total_sales|default:"0" }}</h3>
+        <h3>R{{ total_sales|floatformat:2 }}</h3>
         <p>Total Sales</p>
     </div>
     <div class="admin-card success">
         <div class="card-icon"><i class="bi bi-shop"></i></div>
-        <h3>{{ total_vendors|default:"0" }}</h3>
+        <h3>{{ total_vendors }}</h3>
         <p>Active Vendors</p>
     </div>
     <div class="admin-card info">
         <div class="card-icon"><i class="bi bi-people"></i></div>
-        <h3>{{ total_customers|default:"0" }}</h3>
+        <h3>{{ total_customers }}</h3>
         <p>Active Customers</p>
     </div>
 </div>
+
+<!-- Export Button -->
+{% if reports %}
+<div class="mb-3 text-end">
+    <a href="{% url 'admin_report_download' 'all' %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&report_type={{ request.GET.report_type }}" class="btn btn-admin-secondary">
+        <i class="bi bi-download me-2"></i>Download Full Report (PDF)
+    </a>
+</div>
+{% endif %}
 
 <!-- Reports Table -->
 <div class="admin-table">
@@ -70,58 +83,63 @@
         <tbody>
             {% for report in reports %}
             <tr>
-                <td>#{{ report.id }}</td>
-                <td>{{ report.type|title }}</td>
-                <td>{{ report.description|truncatewords:15 }}</td>
-                <td>{{ report.created_at|date:"d M Y H:i" }}</td>
+                <td><strong>{{ report.id }}</strong></td>
+                <td>
+                    <span class="badge
+                        {% if report.type == 'sales' %}bg-primary
+                        {% elif report.type == 'vendors' %}bg-success
+                        {% elif report.type == 'customers' %}bg-info
+                        {% endif %}">
+                        {{ report.type|title }}
+                    </span>
+                </td>
+                <td>{{ report.description }}</td>
+                <td>{{ report.created_at|date:"d M Y" }}</td>
                 <td>{{ report.generated_by.username }}</td>
                 <td>
                     <div class="admin-action-icons">
-                        <a href="{% url 'admin_report_view' report.id %}" class="btn-view" title="View Report">
+                        <a href="{% url 'admin_report_view' report.id %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}"
+                           class="btn-view"
+                           title="View Report">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <a href="{% url 'admin_report_download' report.id %}" class="btn-edit" title="Download Report">
+                        <a href="{% url 'admin_report_download' report.id %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&report_type={{ report.type }}"
+                           class="btn-edit"
+                           title="Download Report">
                             <i class="bi bi-download"></i>
                         </a>
-                        <form action="{% url 'admin_report_delete' report.id %}" method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn-delete" title="Delete Report" onclick="return confirm('Are you sure you want to delete this report?')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
                     </div>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="text-center text-muted py-4">No reports found</td>
+                <td colspan="6" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <p class="mt-2">No reports found for the selected criteria</p>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<!-- Pagination -->
-{% if reports.has_other_pages %}
-<nav class="mt-4">
-    <ul class="pagination justify-content-center">
-        {% if reports.has_previous %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ reports.previous_page_number }}">Previous</a>
-        </li>
+<!-- Date Range Info -->
+{% if reports %}
+<div class="mt-3">
+    <small class="text-muted">
+        <i class="bi bi-info-circle me-1"></i>
+        Showing {{ reports|length }} report(s)
+        {% if request.GET.start_date and request.GET.end_date %}
+            from {{ request.GET.start_date }} to {{ request.GET.end_date }}
+        {% elif request.GET.start_date %}
+            from {{ request.GET.start_date }}
+        {% elif request.GET.end_date %}
+            up to {{ request.GET.end_date }}
+        {% else %}
+            (last 30 days)
         {% endif %}
-
-        <li class="page-item active">
-            <span class="page-link">{{ reports.number }}</span>
-        </li>
-
-        {% if reports.has_next %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ reports.next_page_number }}">Next</a>
-        </li>
-        {% endif %}
-    </ul>
-</nav>
+    </small>
+</div>
 {% endif %}
 
 {% endblock %}

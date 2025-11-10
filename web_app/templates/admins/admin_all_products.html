@@ -74,9 +74,7 @@
                     <br>
                     <small class="text-muted">ID: {{ product.id }}</small>
                 </td>
-                <td>
-                    <span class="badge bg-info">{{ product.category.name }}</span>
-                </td>
+                <td><span class="badge bg-info">{{ product.category.name }}</span></td>
                 <td>{{ product.vendor.username }}</td>
                 <td><strong>R{{ product.price|floatformat:2 }}</strong></td>
                 <td>
@@ -97,15 +95,18 @@
                 </td>
                 <td>
                     <div class="admin-action-icons">
-                        <a href="#" class="btn-view" title="View Details">
+                        <a href="{% url 'admin_product_detail' product.id %}" class="btn-view" title="View Details">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <a href="#" class="btn-edit" title="Edit Product">
+                        <a href="{% url 'admin_product_edit' product.id %}" class="btn-edit" title="Edit Product">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <button class="btn-delete" title="Delete Product" onclick="return confirm('Are you sure you want to delete this product?')">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                        <form action="{% url 'admin_product_delete' product.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-delete" title="Delete Product" onclick="return confirm('Are you sure you want to delete this product?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
                     </div>
                 </td>
             </tr>
@@ -118,7 +119,7 @@
     </table>
 </div>
 
-<!-- Pagination (if needed) -->
+<!-- Pagination -->
 {% if products.has_other_pages %}
 <nav class="mt-4">
     <ul class="pagination justify-content-center">
@@ -127,11 +128,13 @@
             <a class="page-link" href="?page={{ products.previous_page_number }}">Previous</a>
         </li>
         {% endif %}
-        
-        <li class="page-item active">
-            <span class="page-link">{{ products.number }}</span>
-        </li>
-        
+
+        {% for num in products.paginator.page_range %}
+            <li class="page-item {% if products.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+        {% endfor %}
+
         {% if products.has_next %}
         <li class="page-item">
             <a class="page-link" href="?page={{ products.next_page_number }}">Next</a>

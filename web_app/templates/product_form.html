@@ -6,10 +6,23 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/vendor.css' %}">
+<style>
+/* Added for fixed image preview styling */
+.preview-img {
+    width: 300px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+}
+.preview-img:hover {
+    transform: scale(1.05);
+}
+</style>
 {% endblock %}
 
 {% block vendor_content %}
-
 <div class="profile-header">
     <h2><i class="bi bi-{% if 'Add' in title %}plus-circle{% else %}pencil-square{% endif %} me-2"></i> {{ title }}</h2>
     <p>{% if 'Add' in title %}Add a new product to your catalog{% else %}Update your product information{% endif %}</p>
@@ -118,17 +131,25 @@
                     <div class="row">
                         <div class="col-12">
                             <label class="form-label">{{ form.image.label }}</label>
-                            <div class="image-upload-wrapper">
+                            <div class="image-upload-wrapper text-center">
                                 {% if form.instance.image %}
-                                    <div class="current-image-preview">
-                                        <img src="{{ form.instance.image.url }}" alt="Current product image" class="preview-img">
+                                    <div class="current-image-preview mb-3">
+                                        <img id="previewImage"
+                                             src="{{ form.instance.image.url }}"
+                                             alt="Current product image"
+                                             class="preview-img">
                                         <p class="text-muted mt-2 mb-2"><small>Current image (upload new to replace)</small></p>
                                     </div>
+                                {% else %}
+                                    <img id="previewImage"
+                                         src="{% static 'images/placeholder.png' %}"
+                                         alt="Preview image"
+                                         class="preview-img mb-3">
                                 {% endif %}
                                 <div class="custom-file-upload">
                                     <i class="bi bi-cloud-upload"></i>
                                     <span class="upload-text">Click to upload or drag and drop</span>
-                                    {{ form.image|add_class:"form-control-file" }}
+                                    {{ form.image|add_class:"form-control-file"|attr:"id:imageInput"|attr:"accept:image/*" }}
                                 </div>
                                 <small class="help-text">Recommended: Square images (e.g., 800x800px), JPG or PNG format</small>
                             </div>
@@ -140,7 +161,7 @@
                 </div>
                 {% endif %}
 
-                <!-- Additional Fields (if any) -->
+                <!-- Additional Fields -->
                 {% for field in form %}
                     {% if field.name not in 'name,category,description,price,stock_quantity,image' %}
                     <div class="form-section">
@@ -171,7 +192,6 @@
                     {% endif %}
                 {% endfor %}
 
-                <!-- Non-field errors -->
                 {% if form.non_field_errors %}
                     <div class="alert alert-danger" role="alert">
                         <i class="bi bi-exclamation-triangle me-2"></i>
@@ -179,7 +199,6 @@
                     </div>
                 {% endif %}
 
-                <!-- Submit Buttons -->
                 <div class="text-center mt-4">
                     <a href="{% url 'vendor_products' %}" class="btn btn-secondary me-3">
                         <i class="bi bi-x-circle me-2"></i> Cancel
@@ -193,4 +212,20 @@
     </div>
 </div>
 
+<!-- Added JS for live preview -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const imageInput = document.getElementById("imageInput");
+    const previewImage = document.getElementById("previewImage");
+
+    if (imageInput && previewImage) {
+        imageInput.addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                previewImage.src = URL.createObjectURL(file);
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

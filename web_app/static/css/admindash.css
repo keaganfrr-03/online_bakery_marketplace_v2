@@ -1,13 +1,11 @@
-/* ===================================
-   ADMIN SIDEBAR
-   =================================== */
+/* ADMIN SIDEBAR */
 .sidebar.admin {
     width: 280px;
     height: 100vh;
     position: fixed;
     top: 0;
     left: 0;
-    background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
+    background: #3f51b5; /* Medium blue */
     color: #fff;
     overflow-y: auto;
     z-index: 1000;
@@ -76,9 +74,7 @@
     font-size: 1.1rem;
 }
 
-/* ===================================
-   ADMIN CONTENT AREA
-   =================================== */
+/* ADMIN CONTENT AREA */
 .content-area.admin {
     margin-left: 280px;
     padding: 30px;
@@ -86,9 +82,7 @@
     min-height: 100vh;
 }
 
-/* ===================================
-   ADMIN DASHBOARD CARDS
-   =================================== */
+/* ADMIN DASHBOARD CARDS */
 .admin-card {
     background: #fff;
     border-radius: 12px;

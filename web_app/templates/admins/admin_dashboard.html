@@ -10,6 +10,21 @@
     <p>Welcome back! Here's what's happening with your platform today.</p>
 </div>
 
+
+<!-- Platform Health Alerts -->
+{% if low_stock_products or inactive_vendors %}
+<div class="admin-alert warning">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div>
+        <strong>Attention Required</strong>
+        <p class="mb-0">
+            {% if low_stock_products %}{{ low_stock_products }} products are low on stock. {% endif %}
+            {% if inactive_vendors %}{{ inactive_vendors }} vendors haven't logged in for 30 days.{% endif %}
+        </p>
+    </div>
+</div>
+{% endif %}
+
 <!-- Stats Grid -->
 <div class="admin-stats-grid">
     <!-- Total Vendors -->
@@ -71,40 +86,6 @@
     </div>
 </div>
 
-<!-- Recent Activity -->
-<div class="admin-chart-container">
-    <h4><i class="bi bi-activity me-2"></i>Recent Activity</h4>
-    <div class="admin-table">
-        <table class="table table-hover mb-0">
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Action</th>
-                    <th>Details</th>
-                    <th>Time</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for log in recent_activities %}
-                <tr>
-                    <td>
-                        <strong>{{ log.user.username }}</strong><br>
-                        <small class="text-muted">{{ log.user.user_type|title }}</small>
-                    </td>
-                    <td><span class="badge bg-primary">{{ log.action }}</span></td>
-                    <td>{{ log.details|default:"—" }}</td>
-                    <td><small>{{ log.timestamp|timesince }} ago</small></td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="text-center text-muted">No recent activity</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
 <!-- Quick Actions -->
 <div class="admin-chart-container mt-4">
     <h4><i class="bi bi-lightning me-2"></i>Quick Actions</h4>
@@ -118,27 +99,14 @@
         <a href="{% url 'admin_all_orders' %}" class="btn btn-admin-primary">
             <i class="bi bi-cart-check me-2"></i>View All Orders
         </a>
-        <a href="{% url 'admin_categories' %}" class="btn btn-admin-secondary">
+        <a href="{% url 'admin_categories' %}" class="btn btn-admin-primary">
             <i class="bi bi-tags me-2"></i>Manage Categories
         </a>
-        <a href="{% url 'admin_reports' %}" class="btn btn-admin-secondary">
+        <a href="{% url 'admin_reports' %}" class="btn btn-admin-primary">
             <i class="bi bi-file-earmark-text me-2"></i>Generate Reports
         </a>
     </div>
 </div>
 
-<!-- Platform Health Alerts -->
-{% if low_stock_products or inactive_vendors %}
-<div class="admin-alert warning">
-    <i class="bi bi-exclamation-triangle-fill"></i>
-    <div>
-        <strong>Attention Required</strong>
-        <p class="mb-0">
-            {% if low_stock_products %}{{ low_stock_products }} products are low on stock. {% endif %}
-            {% if inactive_vendors %}{{ inactive_vendors }} vendors haven't logged in for 30 days.{% endif %}
-        </p>
-    </div>
-</div>
-{% endif %}
 
 {% endblock %}

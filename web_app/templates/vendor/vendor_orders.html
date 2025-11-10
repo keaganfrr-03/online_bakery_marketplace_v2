@@ -45,12 +45,12 @@
                     </div>
                     <div class="col-md-4">
                         <div class="customer-stat-card">
-                            <div class="stat-icon stat-revenue">
-                                <i class="bi bi-currency-dollar"></i>
+                            <div class="stat-icon stat-cancelled">
+                                <i class="bi bi-x-circle"></i>
                             </div>
                             <div class="stat-content">
-                                <h6>Total Revenue</h6>
-                                <p class="stat-value">R{{ total_revenue|default:"0" }}</p>
+                                <h6>Cancelled Orders</h6>
+                                <p class="stat-value">{{ cancelled_count|default:"0" }}</p>
                             </div>
                         </div>
                     </div>

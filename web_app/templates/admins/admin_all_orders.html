@@ -83,12 +83,9 @@
                             <a href="{% url 'admin_order_edit' order.id %}" class="btn-edit" title="Edit Order">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form action="{% url 'admin_order_delete' order.id %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn-delete" title="Delete Order" onclick="return confirm('Are you sure you want to delete this order?')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <a href="{% url 'admin_order_delete' order.id %}" class="btn-delete" title="Delete Order">
+                                <i class="bi bi-trash"></i>
+                            </a>
                         </div>
                     </td>
                 </tr>

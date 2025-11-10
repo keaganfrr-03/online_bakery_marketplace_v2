@@ -12,22 +12,25 @@ Setup
 9. Make migrations: python manage.py makemigrations
 10. Run the migrations: python manage.py migrate
 11. Create local admin user: python manage.py createsuperuser
-12. Start the app server: python manage.py runserver
-13. Enter admin name, password  and email
-14. Register for a demo account on https://dashboard.stripe.com/
-15. Open Developers--> API keys --> copy and paste into the .env file the Publishable key and Secret key
+12. Seed demo users and products: python manage.py seed_db or python manage.py seed_db --force
+13. Start the app server: python manage.py runserver
+14. Enter admin name, password  and email
+15. Register for a demo account on https://dashboard.stripe.com/
+16. Open Developers--> API keys --> copy and paste into the .env file the Publishable key and Secret key
 
 Main app page will be accessed in browser on http://localhost:8000
 Django/system dashboard is accessed on http://localhost:8000/admin
 To expose the API endpoints documentation visit http://localhost:8000/swagger
 You can also test the API using the Postman collection included in the repository.
 
-Features
+Demo Users:
+Django admin: u: admin p: admin
+System Admin: u:eddie p: adminpass
+Vendors: u: vendor1 p: vendorpass VendorID: ISK254
+Vendor2: u:vendor2 p: vendorpass VendorID: LFE037
+Customer1: u:customer1 p: customerpass
 
-User account creation, login, and logout
-Staff users can create, view, edit, and delete products and ingredients
-Users can create orders with any number of products/ingredients
-Users can view their own orders
+Stripe Online Transcations:
 
 Card number: 4242 4242 4242 4242
 Expiration date: any future date (e.g., 12/34)
@@ -40,51 +43,15 @@ CVC: any 3 digits (e.g., 123)
 | Mastercard       | 5555 5555 5555 4444 | Always succeeds                 |
 | American Express | 3782 822463 10005   | Always succeeds                 |
 
+Vendor ID Management:
+# Assign vendor IDs to all vendors who don't have one
+python manage.py assign_vendor_ids
 
-| Group                         | Function Name                     | Description                                            |
-| ----------------------------- | --------------------------------- | ------------------------------------------------------ |
-| **BASIC PAGES**               | `index`                           | Show homepage with categories.                         |
-|                               | `category_detail`                 | Show products in a specific category.                  |
-| **USERS**                     | `UserViewSet.register`            | API endpoint to register a new user.                   |
-|                               | `ProfileViewSet`                  | API endpoint for profile CRUD.                         |
-| **PRODUCTS**                  | `CategoryViewSet`                 | API endpoint for category CRUD.                        |
-|                               | `ProductViewSet`                  | API endpoint for product CRUD.                         |
-| **CART**                      | `CartViewSet.add`                 | API endpoint to add items to cart.                     |
-|                               | `CartViewSet.remove`              | API endpoint to remove items from cart.                |
-|                               | `add_to_cart`                     | Add product to cart via POST request.                  |
-|                               | `cart_view`                       | View cart, update quantities, delete items.            |
-|                               | `remove_from_cart`                | Remove item from cart via POST.                        |
-| **ORDERS**                    | `OrderViewSet.checkout`           | API endpoint to checkout cart and create order.        |
-|                               | `checkout_view`                   | Handle order creation and payment methods (cash/card). |
-|                               | `order_confirmation`              | Display order confirmation page.                       |
-|                               | `customer_orders`                 | View current customer orders.                          |
-|                               | `customer_order_history`          | View customer completed and cancelled orders.          |
-|                               | `update_order_status`             | Vendor updates status of their orders.                 |
-|                               | `mark_order_paid`                 | Vendor marks an order as paid.                         |
-|                               | `get_vendor_orders`               | Helper to get vendor-specific orders.                  |
-|                               | `vendor_orders_view`              | View vendor pending orders.                            |
-|                               | `vendor_order_history`            | View vendor paid and cancelled orders.                 |
-| **REGISTER & LOGIN**          | `RegisterForm`                    | User registration form.                                |
-|                               | `register_view`                   | Handle registration via form.                          |
-|                               | `CustomLoginView.form_valid`      | Add pending cart items after login.                    |
-|                               | `CustomLoginView.get_success_url` | Redirect users after login.                            |
-| **VENDOR PRODUCT MANAGEMENT** | `vendor_dash`                     | Vendor dashboard with products.                        |
-|                               | `add_product`                     | Add a new product.                                     |
-|                               | `edit_product`                    | Edit existing product.                                 |
-|                               | `delete_product`                  | Delete a product.                                      |
-|                               | `product_list`                    | List vendor products.                                  |
-|                               | `vendor_products`                 | Vendor products management page.                       |
-|                               | `inventory_view`                  | View inventory list.                                   |
-| **PROFILE MANAGEMENT**        | `profile_view`                    | View and update profile for customer/vendor.           |
-|                               | `profile_edit`                    | Edit profile information.                              |
-|                               | `vendor_edit_profile`             | Vendor-specific profile edit.                          |
-| **REPORTS & INVOICES**        | `reports_view`                    | View vendor sales reports.                             |
-|                               | `invoice_view`                    | Generate PDF invoice for order.                        |
-|                               | `download_report`                 | Download sales report as PDF.                          |
-|                               | `print_report`                    | Render printable report view.                          |
-| **PAYMENTS & STRIPE**         | `create_checkout_session`         | Create Stripe checkout session.                        |
-|                               | `stripe_success`                  | Handle Stripe payment success.                         |
-|                               | `stripe_webhook`                  | Stripe webhook for checkout completion.                |
+# Regenerate vendor IDs for ALL vendors (including those who already have one)
+python manage.py assign_vendor_ids --all
+
+# Assign vendor ID to a specific user
+python manage.py assign_vendor_ids --username john_vendor
 
 
 Reach out to me at eddie@ecns.co.za for any queries.

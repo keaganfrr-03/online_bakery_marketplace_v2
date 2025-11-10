@@ -34,7 +34,7 @@
 
                 <!-- Search form -->
                 <form class="d-flex me-auto" action="{% url 'product_search' %}" method="get">
-                    <input class="form-control me-2" type="search" name="q" placeholder="Search products..." value="{{ request.GET.q }}">
+                    <input class="form-control me-2" type="search" name="q" placeholder="Search products..." value="{{ request.GET.q|default:'' }}">
                     <button class="btn btn-outline-success" type="submit"><i class="bi bi-search"></i></button>
                 </form>
 
@@ -58,7 +58,7 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
 
                 {% if user.is_authenticated %}
-                    {# ✅ Cart - Only show for customers #}
+                    <!-- Cart - Only show for customers -->
                     {% if user.user_type == "customer" %}
                         <li class="nav-item">
                             <a class="nav-link position-relative" href="{% url 'cart' %}">
@@ -72,14 +72,14 @@
                             </a>
                         </li>
                     {% elif user.user_type == "vendor" %}
-                        {# ✅ Dashboard link for vendors #}
+                        <!-- Dashboard link for vendors -->
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'vendor_dash' %}">
                                 <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                         </li>
                     {% elif user.user_type == "admin" %}
-                        {# ✅ Dashboard link for admins - redirects to admin dashboard #}
+                        <!-- Dashboard link for admins -->
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'admin_dashboard' %}">
                                 <i class="bi bi-shield-check"></i> Admin Dashboard
@@ -93,17 +93,21 @@
                             <i class="bi bi-person-circle me-1"></i> {{ user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> My Account</a></li>
-
-                            {# ✅ Customer-only menu items #}
                             {% if user.user_type == "customer" %}
+                                <!-- Customer menu items -->
+                                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> My Account</a></li>
                                 <li><a class="dropdown-item" href="{% url 'customer_orders' %}"><i class="bi bi-bag"></i> My Orders</a></li>
                                 <li><a class="dropdown-item" href="{% url 'customer_order_history' %}"><i class="bi bi-clock-history"></i> Order History</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                            {% elif user.user_type == "vendor" %}
+                                <!-- Vendor menu items -->
+                                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person"></i> My Account</a></li>
+                                <li><a class="dropdown-item" href="{% url 'vendor_orders' %}"><i class="bi bi-bag-check"></i> Vendor Orders</a></li>
+                                <li><a class="dropdown-item" href="{% url 'vendor_reports' %}"><i class="bi bi-graph-up"></i> Reports</a></li>
+                                <li><hr class="dropdown-divider"></li>
                             {% endif %}
 
-                            {# ✅ Removed Reports and Settings from dropdown - they're in vendor sidebar #}
-
-                            <li><hr class="dropdown-divider"></li>
+                            <!-- Logout for all users -->
                             <li>
                                 <form action="{% url 'logout' %}" method="post" style="display:inline;">
                                     {% csrf_token %}
@@ -116,7 +120,7 @@
                     </li>
 
                 {% else %}
-                    {# ✅ Guest users see login/register #}
+                    <!-- Guest users see login/register -->
                     <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Register</a></li>
                 {% endif %}
@@ -125,8 +129,7 @@
     </div>
 </nav>
 
-
-{# ✅ Wrapper block - default container for normal pages #}
+{# Wrapper block - default container for normal pages #}
 {% block content_wrapper %}
 <div class="container mt-4">
     {% block content %}{% endblock %}
