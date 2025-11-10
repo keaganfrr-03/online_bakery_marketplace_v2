@@ -135,7 +135,11 @@ urlpatterns = [
     path("admins/orders/", views.admin_all_orders, name="admin_all_orders"),
     path('admins/orders/<int:id>/', views.admin_order_detail, name='admin_order_detail'),
     path('admins/orders/<int:id>/edit/', views.admin_order_edit, name='admin_order_edit'),
-    path('admins/orders/<int:id>/delete/', views.admin_order_delete, name='admin_order_delete')
+    path('admins/orders/<int:id>/delete/', views.admin_order_delete, name='admin_order_delete'),
+
+
+    path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
+    path('terms-and-conditions/', views.terms_and_conditions, name='terms_and_conditions'),
 ]
 
 if settings.DEBUG:

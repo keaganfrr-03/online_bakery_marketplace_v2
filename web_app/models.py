@@ -67,17 +67,12 @@ class Profile(models.Model):
 def category_image_upload_path(instance, filename):
     """
     Generate upload path for category images.
+    Always saves as .jpg regardless of upload format.
     Format: products/{category_lowercase}/{CategoryName-without-s}.jpg
-    Always saves as .jpg regardless of upload format
     """
-    # Get the category name in lowercase for folder
-    category_folder = instance.name.lower()
-
-    # Create filename: remove 's' from end if plural, always .jpg
+    category_folder = slugify(instance.name).replace('-', '_')
     category_name = instance.name.rstrip('s') if instance.name.endswith('s') else instance.name
     new_filename = f'{category_name}.jpg'
-
-    # Return the path: products/{category_lowercase}/{CategoryName}.jpg
     return f'products/{category_folder}/{new_filename}'
 
 
@@ -88,47 +83,47 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    def get_category_folder_path(self):
+        """Get absolute folder path for this category"""
+        return os.path.join(settings.MEDIA_ROOT, "products", slugify(self.name).replace("-", "_"))
+
     def save(self, *args, **kwargs):
-        """Override save to convert image to JPG and delete old image"""
-        # Handle old image deletion
-        try:
-            old_instance = Category.objects.get(pk=self.pk)
-            if old_instance.image and self.image and old_instance.image != self.image:
-                if os.path.isfile(old_instance.image.path):
-                    os.remove(old_instance.image.path)
-        except Category.DoesNotExist:
-            pass
+        """Convert uploaded image to JPG and save directly to category folder"""
+        # Check if there's actually a file (new upload or existing)
+        if self.image and self.image.name:
+            try:
+                # Try to open the image - will work for new uploads
+                # Will fail for existing paths stored in DB
+                img = Image.open(self.image)
 
-        # Convert uploaded image to JPG if it's not already
-        if self.image:
-            # Open the image
-            img = Image.open(self.image)
+                # If we got here, it's a new upload - process it
+                # Convert to RGB if necessary
+                if img.mode in ('RGBA', 'LA', 'P'):
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    if img.mode == 'P':
+                        img = img.convert('RGBA')
+                    background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                    img = background
+                elif img.mode != 'RGB':
+                    img = img.convert('RGB')
 
-            # Convert to RGB if necessary (handles PNG with transparency, etc.)
-            if img.mode in ('RGBA', 'LA', 'P'):
-                # Create a white background
-                background = Image.new('RGB', img.size, (255, 255, 255))
-                if img.mode == 'P':
-                    img = img.convert('RGBA')
-                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
-                img = background
-            elif img.mode != 'RGB':
-                img = img.convert('RGB')
+                # Ensure folder exists
+                folder_path = self.get_category_folder_path()
+                os.makedirs(folder_path, exist_ok=True)
 
-            # Save as JPG
-            output = BytesIO()
-            img.save(output, format='JPEG', quality=95)
-            output.seek(0)
+                # Save as JPG on disk
+                category_name = self.name.rstrip('s') if self.name.endswith('s') else self.name
+                filename = f"{category_name}.jpg"
+                full_path = os.path.join(folder_path, filename)
+                img.save(full_path, format='JPEG', quality=95)
 
-            # Replace the image file with JPG version
-            self.image = InMemoryUploadedFile(
-                output,
-                'ImageField',
-                f"{self.image.name.split('.')[0]}.jpg",
-                'image/jpeg',
-                sys.getsizeof(output),
-                None
-            )
+                # Assign relative path to ImageField
+                relative_path = os.path.join('products', slugify(self.name).replace('-', '_'), filename)
+                self.image.name = relative_path
+
+            except Exception as e:
+                # If opening fails, it's an existing path - don't process
+                pass
 
         super().save(*args, **kwargs)
 

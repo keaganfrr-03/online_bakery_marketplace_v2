@@ -2354,7 +2354,7 @@ def admin_category_add(request):
     Admin adds a new product category.
     """
     if request.method == "POST":
-        form = CategoryForm(request.POST, request.FILES)  # Add request.FILES
+        form = CategoryForm(request.POST, request.FILES)
         if form.is_valid():
             category = form.save()
             messages.success(request, f"Category '{category.name}' added successfully.")
@@ -2385,7 +2385,6 @@ def admin_category_add(request):
 def admin_category_edit(request, id):
     category = get_object_or_404(Category, id=id)
 
-    # Log viewing the edit page
     if request.method == "GET":
         log_activity(
             user=request.user,
@@ -2395,11 +2394,26 @@ def admin_category_edit(request, id):
         )
 
     if request.method == "POST":
-        form = CategoryForm(request.POST, instance=category)
-        if form.is_valid():
-            form.save()
+        print(f"DEBUG VIEW: request.FILES = {request.FILES}")
+        print(f"DEBUG VIEW: request.POST = {request.POST}")
 
-            # Log category update
+        form = CategoryForm(request.POST, request.FILES, instance=category)
+
+        if form.is_valid():
+            print(f"DEBUG VIEW: form.cleaned_data = {form.cleaned_data}")
+            print(f"DEBUG VIEW: form.cleaned_data.get('image') = {form.cleaned_data.get('image')}")
+
+            # Just save normally - let the form and model handle everything
+            category = form.save()
+
+            # ensure folder exists
+            category_folder = os.path.join(
+                settings.MEDIA_ROOT,
+                "products",
+                slugify(category.name).replace("-", "_")
+            )
+            os.makedirs(category_folder, exist_ok=True)
+
             log_activity(
                 user=request.user,
                 action="Updated Category",
@@ -2409,10 +2423,15 @@ def admin_category_edit(request, id):
 
             messages.success(request, "Category updated successfully")
             return redirect("admin_categories")
+
     else:
         form = CategoryForm(instance=category)
 
-    return render(request, "admins/admin_category_form.html", {"form": form, "title": "Edit Category"})
+    return render(
+        request,
+        "admins/admin_category_form.html",
+        {"form": form, "title": "Edit Category"}
+    )
 
 
 @admin_required
@@ -3417,3 +3436,9 @@ def admin_update_account(request):
         return redirect("admin_settings")
 
 
+def privacy_policy(request):
+    return render(request, 'privacy_policy.html')
+
+
+def terms_and_conditions(request):
+    return render(request, 'terms_and_conditions.html')
