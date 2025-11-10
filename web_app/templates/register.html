@@ -13,6 +13,18 @@
         </div>
 
         <div class="login-body">
+
+            <!-- Add messages here -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" style="background: #d1fae5; color: #065f46;
+                                padding: 12px; border-radius: 8px;
+                                margin-bottom: 20px; font-size: 14px; border: 1px solid #34d399;">
+                        {{ message|safe }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
             <form method="post">
                 {% csrf_token %}
 
@@ -43,7 +55,7 @@
                 <div class="form-group">
                     <label for="{{ form.cell.id_for_label }}">{{ form.cell.label }}</label>
                     <div class="input-icon">
-                        {{ form.cell|add_class:"form-control"|attr:"placeholder:e.g. +1234567890" }}
+                        {{ form.cell|add_class:"form-control"|attr:"placeholder:Enter Mobile Number" }}
                     </div>
                     {% if form.cell.errors %}
                         <small style="color: #dc2626;">{{ form.cell.errors.0 }}</small>
@@ -65,7 +77,6 @@
                         <small style="color: #dc2626;">{{ form.user_type.errors.0 }}</small>
                     {% endif %}
                 </div>
-
 
                 <!-- Password + Confirm Password -->
                 <div class="form-row">

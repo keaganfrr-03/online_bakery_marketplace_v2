@@ -31,7 +31,7 @@
                                         </div>
                                         <div class="stat-content">
                                             <h6>Total Products</h6>
-                                            <p class="stat-value">{{ products.paginator.count }}</p>
+                                            <p class="stat-value">{{ total_products }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -42,7 +42,7 @@
                                         </div>
                                         <div class="stat-content">
                                             <h6>Avg. Price</h6>
-                                            <p class="stat-value">R{{ avg_price|default:"15.00" }}</p>
+                                            <p class="stat-value">R{{ avg_price|floatformat:2|default:"15.00" }}</p>
                                         </div>
                                     </div>
                                 </div>

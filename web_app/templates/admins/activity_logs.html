@@ -27,17 +27,7 @@
                 {% for log in logs %}
                 <tr>
                     <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
-                    <td>
-                        <span class="badge admin-badge
-                            {% if 'create' in log.action.lower or 'add' in log.action.lower %}success
-                            {% elif 'update' in log.action.lower or 'edit' in log.action.lower %}warning
-                            {% elif 'delete' in log.action.lower or 'remove' in log.action.lower %}danger
-                            {% elif 'login' in log.action.lower %}info
-                            {% else %}secondary
-                            {% endif %}">
-                            {{ log.action }}
-                        </span>
-                    </td>
+                    <td> {{ log.action }} </td>
                     <td>{{ log.details|default:"—" }}</td>
                     <td>
                         {% if log.user.user_type == "vendor" and log.user.profile.company_name %}

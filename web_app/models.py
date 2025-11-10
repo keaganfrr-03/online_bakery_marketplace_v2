@@ -1,6 +1,16 @@
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .utils import generate_vendor_id
+import uuid
+from django.utils.text import slugify
+import os
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import sys
 
 
 # USERS / VENDORS
@@ -10,6 +20,7 @@ class CustomUser(AbstractUser):
         ('vendor', 'Vendor'),
     )
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES)
+    cell = models.CharField(max_length=15, blank=True, null=True)
 
     groups = models.ManyToManyField(
         Group,
@@ -52,11 +63,74 @@ class Profile(models.Model):
 
 
 # Products
+
+def category_image_upload_path(instance, filename):
+    """
+    Generate upload path for category images.
+    Format: products/{category_lowercase}/{CategoryName-without-s}.jpg
+    Always saves as .jpg regardless of upload format
+    """
+    # Get the category name in lowercase for folder
+    category_folder = instance.name.lower()
+
+    # Create filename: remove 's' from end if plural, always .jpg
+    category_name = instance.name.rstrip('s') if instance.name.endswith('s') else instance.name
+    new_filename = f'{category_name}.jpg'
+
+    # Return the path: products/{category_lowercase}/{CategoryName}.jpg
+    return f'products/{category_folder}/{new_filename}'
+
+
 class Category(models.Model):
     name = models.CharField(max_length=50)
+    image = models.ImageField(upload_to=category_image_upload_path, blank=True, null=True)
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        """Override save to convert image to JPG and delete old image"""
+        # Handle old image deletion
+        try:
+            old_instance = Category.objects.get(pk=self.pk)
+            if old_instance.image and self.image and old_instance.image != self.image:
+                if os.path.isfile(old_instance.image.path):
+                    os.remove(old_instance.image.path)
+        except Category.DoesNotExist:
+            pass
+
+        # Convert uploaded image to JPG if it's not already
+        if self.image:
+            # Open the image
+            img = Image.open(self.image)
+
+            # Convert to RGB if necessary (handles PNG with transparency, etc.)
+            if img.mode in ('RGBA', 'LA', 'P'):
+                # Create a white background
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                img = background
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+
+            # Save as JPG
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=95)
+            output.seek(0)
+
+            # Replace the image file with JPG version
+            self.image = InMemoryUploadedFile(
+                output,
+                'ImageField',
+                f"{self.image.name.split('.')[0]}.jpg",
+                'image/jpeg',
+                sys.getsizeof(output),
+                None
+            )
+
+        super().save(*args, **kwargs)
 
 
 def product_image_upload_path(instance, filename):
@@ -64,9 +138,6 @@ def product_image_upload_path(instance, filename):
     Generate upload path based on product category.
     Format: products/{category_slug}/{filename}
     """
-    import os
-    import uuid
-    from django.utils.text import slugify
 
     # Get the category name and convert to lowercase slug
     if instance.category:
@@ -82,7 +153,7 @@ def product_image_upload_path(instance, filename):
     return f'products/{category_folder}/{unique_filename}'
 
 
-# Updated Product model - add this to your models.py
+# Product model
 class Product(models.Model):
     objects = None
     name = models.CharField(max_length=100)
@@ -91,11 +162,10 @@ class Product(models.Model):
     stock_quantity = models.IntegerField()
     availability = models.BooleanField(default=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    vendor = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="products")
 
     # Change this line to use the custom upload path
     image = models.ImageField(upload_to=product_image_upload_path)
-
-    vendor = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -177,3 +247,12 @@ class ActivityLog(models.Model):
 
     def __str__(self):
         return f"{self.timestamp} - {self.user} - {self.action}"
+
+
+@receiver(post_save, sender=CustomUser)
+def create_vendor_profile(sender, instance, created, **kwargs):
+    if created and instance.user_type == 'vendor':
+        profile, _ = Profile.objects.get_or_create(user=instance)
+        if not profile.vendor_id:
+            profile.vendor_id = generate_vendor_id()
+            profile.save()

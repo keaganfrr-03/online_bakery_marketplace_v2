@@ -1,3 +1,5 @@
+import random
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -81,7 +83,7 @@ class Command(BaseCommand):
 
         customer1, created = User.objects.get_or_create(
             username="customer1",
-            defaults={"email": "info@kfc.co.za", "user_type": "customer"},
+            defaults={"email": "info@kasibakeries.co.za", "user_type": "customer"},
         )
         if created or force:
             customer1.set_password("customerpass")
@@ -209,11 +211,14 @@ class Command(BaseCommand):
 
         product_objs = {}
         for name, desc, cat_name, price, stock, image in products_data:
+            # Randomly assign to vendor1 or vendor2
+            assigned_vendor = random.choice([vendor1, vendor2])
+
             prod, _ = Product.objects.get_or_create(
                 name=name,
-                vendor=vendor1,
-                category=category_objs[cat_name],
                 defaults={
+                    "vendor": assigned_vendor,
+                    "category": category_objs[cat_name],
                     "description": desc,
                     "price": price,
                     "stock_quantity": stock,
@@ -245,5 +250,5 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("🔐 Login credentials:"))
         self.stdout.write(self.style.SUCCESS("   Superuser: admin / admin"))
         self.stdout.write(self.style.SUCCESS("   Admin: eddie / adminpass"))
-        self.stdout.write(self.style.SUCCESS("   Vendor: vendor1 / vendorpass"))
+        self.stdout.write(self.style.SUCCESS("   Vendor: vendor1 and vendor2 / vendorpass"))
         self.stdout.write(self.style.SUCCESS("   Customer: customer1 / customerpass"))

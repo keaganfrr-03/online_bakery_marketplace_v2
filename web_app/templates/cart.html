@@ -28,10 +28,6 @@
 {% block sidebar_content %}
 
 <style>
-.body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
 .profile-header {
     background: linear-gradient(135deg, #8b4d23 0%, #5C3317 100%);
     color: white;
@@ -419,7 +415,9 @@ const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 document.addEventListener('DOMContentLoaded', () => {
     const rows = document.querySelectorAll('.cart-item[data-product-id]');
     const totalCell = document.getElementById('cart-total');
+    const cartBadge = document.getElementById('cart-badge'); // Cart badge in header/sidebar
 
+    // Recalculate total for the cart page
     function recalcTotal() {
         let total = 0;
         rows.forEach(row => {
@@ -429,12 +427,28 @@ document.addEventListener('DOMContentLoaded', () => {
         totalCell.textContent = 'R' + total.toFixed(2);
     }
 
+    // Fetch updated cart count from server and update badge
+    function updateCartBadge() {
+        fetch("{% url 'cart' %}", {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrfToken},
+            body: new URLSearchParams({'get_cart_count': '1'})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(cartBadge && data.cart_count !== undefined){
+                cartBadge.textContent = data.cart_count;
+            }
+        });
+    }
+
     rows.forEach(row => {
         const qtyInput = row.querySelector('.quantity-input');
         const priceCell = row.querySelector('.price');
         const subtotalCell = row.querySelector('.subtotal');
         const removeBtn = row.querySelector('.remove-btn');
 
+        // Handle quantity changes
         qtyInput.addEventListener('input', () => {
             const price = parseFloat(priceCell.textContent.replace('R','')) || 0;
             const qty = parseInt(qtyInput.value) || 0;
@@ -449,9 +463,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     'quantity': qty,
                     'action': 'update'
                 })
-            });
+            }).then(() => updateCartBadge());
         });
 
+        // Handle remove button
         removeBtn.addEventListener('click', () => {
             fetch("{% url 'cart' %}", {
                 method: 'POST',
@@ -464,10 +479,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }).then(() => {
                 row.remove();
                 recalcTotal();
+                updateCartBadge();
             });
         });
     });
 
+    // Checkout form submission
     const checkoutForm = document.getElementById('checkout-form');
     checkoutForm.addEventListener('submit', async e => {
         e.preventDefault();
@@ -496,6 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+
 
 {% else %}
 <div class="empty-cart">
