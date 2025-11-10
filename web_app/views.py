@@ -35,7 +35,8 @@ from .forms import (
     ProfileForm, VendorProfileForm, VendorSettingsForm,
     VendorLoginForm, VendorForm, CustomerForm, CategoryForm, ProductForm, OrderForm, AdminVendorFullForm
 )
-from reportlab.pdfgen import canvas
+from django import get_version as django_version
+import sys
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Sum, Prefetch, F, DecimalField, ExpressionWrapper, Max, Count, Avg
@@ -1314,7 +1315,7 @@ def vendor_orders(request):
     return render(request, "vendor/vendor_orders.html", context)
 
 
-# This view is not being used for now
+# This view is not being used for now, I will need to come back for it in time
 @login_required
 def vendor_orders_view(request):
     """View vendor's pending orders with enhanced details"""
@@ -1978,14 +1979,19 @@ def admin_dashboard(request):
     total_customers = CustomUser.objects.filter(user_type="customer").count()
 
     total_orders = Order.objects.count()
-    pending_orders = Order.objects.filter(status="Pending").count()
+    pending_orders = Order.objects.filter(status="pending").count()
     total_revenue = Order.objects.aggregate(total=Sum("total_price"))["total"] or 0
 
-    low_stock_threshold = 10
-    low_stock_products = Product.objects.filter(stock_quantity__lt=low_stock_threshold).count()
+    low_stock_threshold = 5
+    low_stock_products = Product.objects.filter(
+        stock_quantity__lte=low_stock_threshold
+    ).count()
 
     thirty_days_ago = timezone.now() - timedelta(days=30)
-    inactive_vendors = CustomUser.objects.filter(user_type="vendor", last_login__lt=thirty_days_ago).count()
+    inactive_vendors = CustomUser.objects.filter(
+        user_type="vendor",
+        last_login__lt=thirty_days_ago
+    ).count()
 
     context = {
         "total_products": total_products,
@@ -2012,6 +2018,33 @@ def admin_dashboard(request):
 def admin_all_products(request):
     products = Product.objects.select_related("vendor", "category").all()
 
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    category_id = request.GET.get('category', '')
+    vendor_id = request.GET.get('vendor', '')
+
+    # Apply filters
+    if search_query:
+        products = products.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+    if vendor_id:
+        products = products.filter(vendor_id=vendor_id)
+
+    # Get all categories and vendors for the filter dropdowns
+    categories = Category.objects.all()
+    vendors = CustomUser.objects.filter(user_type='vendor')
+
+    # Pagination
+    paginator = Paginator(products, 20)  # 20 products per page
+    page_number = request.GET.get('page')
+    products = paginator.get_page(page_number)
+
     log_activity(
         user=request.user,
         action="Viewed All Products",
@@ -2019,7 +2052,13 @@ def admin_all_products(request):
         request=request
     )
 
-    return render(request, "admins/admin_all_products.html", {"products": products})
+    context = {
+        'products': products,
+        'categories': categories,
+        'vendors': vendors,
+    }
+
+    return render(request, "admins/admin_all_products.html", context)
 
 
 @admin_required
@@ -2110,6 +2149,32 @@ def admin_product_delete(request, id):
 @admin_required
 def admin_vendors(request):
     vendors = CustomUser.objects.filter(user_type="vendor")
+
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+
+    # Apply search filter
+    if search_query:
+        vendors = vendors.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(profile__company_name__icontains=search_query) |
+            Q(profile__vendor_id__icontains=search_query)
+        )
+
+    # Apply status filter
+    if status_filter == 'active':
+        vendors = vendors.filter(is_active=True)
+    elif status_filter == 'inactive':
+        vendors = vendors.filter(is_active=False)
+
+    # Pagination
+    paginator = Paginator(vendors, 20)  # 20 vendors per page
+    page_number = request.GET.get('page')
+    vendors = paginator.get_page(page_number)
 
     log_activity(
         user=request.user,
@@ -2319,10 +2384,33 @@ def admin_customer_delete(request, id):
     return render(request, "admins/admin_customer_delete.html", {"customer": customer})
 
 
-
 @admin_required
 def admin_customers(request):
     customers = CustomUser.objects.filter(user_type="customer")
+
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+
+    # Apply search filter
+    if search_query:
+        customers = customers.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+
+    # Apply status filter
+    if status_filter == 'active':
+        customers = customers.filter(is_active=True)
+    elif status_filter == 'inactive':
+        customers = customers.filter(is_active=False)
+
+    # Pagination
+    paginator = Paginator(customers, 20)  # 20 customers per page
+    page_number = request.GET.get('page')
+    customers = paginator.get_page(page_number)
 
     log_activity(
         user=request.user,
@@ -2336,7 +2424,22 @@ def admin_customers(request):
 
 @admin_required
 def admin_categories(request):
-    admin_categories = Category.objects.all()
+    categories = Category.objects.all()
+
+    # Get search parameter
+    search_query = request.GET.get('search', '')
+
+    # Apply search filter
+    if search_query:
+        categories = categories.filter(name__icontains=search_query)
+
+    # Order by name
+    categories = categories.order_by('name')
+
+    # Pagination
+    paginator = Paginator(categories, 15)  # 20 categories per page
+    page_number = request.GET.get('page')
+    categories = paginator.get_page(page_number)
 
     log_activity(
         user=request.user,
@@ -2345,7 +2448,7 @@ def admin_categories(request):
         request=request
     )
 
-    return render(request, "admins/admin_categories.html", {"categories": admin_categories})
+    return render(request, "admins/admin_categories.html", {"categories": categories})
 
 
 @admin_required
@@ -2922,8 +3025,6 @@ def admin_report_delete(request, report_id):
     return redirect('admin_reports')
 
 
-from django import get_version as django_version
-import sys
 
 @admin_required
 def admin_settings(request):
@@ -2944,7 +3045,6 @@ def admin_settings(request):
     return render(request, "admins/admin_settings.html", context)
 
 
-
 @admin_required
 def admin_report_preview_generic(request):
     """Generic preview stub for admin"""
@@ -2959,11 +3059,63 @@ def activity_log_view(request):
         messages.error(request, "Access denied.")
         return redirect("index")
 
-    logs = ActivityLog.objects.select_related('user', 'user__profile').order_by('-timestamp')[:100]
+    logs = ActivityLog.objects.select_related('user', 'user__profile').all()
 
-    log_activity(user=request.user, action="Viewed Activity Logs", details=f"Admin viewed activity logs.", request=request)
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    user_type_filter = request.GET.get('user_type', '')
+    action_filter = request.GET.get('action', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
 
-    return render(request, "admins/activity_logs.html", {"logs": logs})
+    # Apply search filter
+    if search_query:
+        logs = logs.filter(
+            Q(action__icontains=search_query) |
+            Q(details__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(ip_address__icontains=search_query)
+        )
+
+    # Apply user type filter
+    if user_type_filter:
+        logs = logs.filter(user__user_type=user_type_filter)
+
+    # Apply action filter
+    if action_filter:
+        logs = logs.filter(action__icontains=action_filter)
+
+    # Apply date range filters
+    if date_from:
+        logs = logs.filter(timestamp__date__gte=date_from)
+    if date_to:
+        logs = logs.filter(timestamp__date__lte=date_to)
+
+    # Order by most recent
+    logs = logs.order_by('-timestamp')
+
+    # Get distinct actions for the filter dropdown
+    distinct_actions = ActivityLog.objects.values_list('action', flat=True).distinct().order_by('action')
+
+    # Pagination
+    paginator = Paginator(logs, 50)  # 50 logs per page
+    page_number = request.GET.get('page')
+    logs = paginator.get_page(page_number)
+
+    log_activity(
+        user=request.user,
+        action="Viewed Activity Logs",
+        details=f"Admin viewed activity logs.",
+        request=request
+    )
+
+    context = {
+        'logs': logs,
+        'distinct_actions': distinct_actions,
+    }
+
+    return render(request, "admins/activity_logs.html", context)
 
 
 # -----------------------------------------------------------------------------
@@ -3141,6 +3293,7 @@ def handle_paypal_payment(request, order):
 
     return JsonResponse(response_data, status=400)
 
+
 # -----------------------------------------------------------------------------
 # INVOICES & DOCUMENTS
 # -----------------------------------------------------------------------------
@@ -3308,7 +3461,6 @@ def vendor_reports_view(request):
     }
 
     return render(request, "vendor/vendor_reports.html", context)
-
 
 
 @login_required
