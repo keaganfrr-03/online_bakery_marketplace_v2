@@ -14,7 +14,6 @@
         </div>
 
         <div class="login-body">
-
             {% if messages %}
                 {% for message in messages %}
                     <div id="snackbar" class="show {% if message.tags %}{{ message.tags }}{% endif %}">
@@ -29,38 +28,30 @@
 
                 <div class="form-group">
                     <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
-                    <div class="input-icon">
-                        {{ form.username|add_class:"form-control"|attr:"placeholder:Enter Username" }}
-                    </div>
+                    {{ form.username|add_class:"form-control"|attr:"placeholder:Enter Username" }}
                     {% if form.username.errors %}
-                        <small style="color: #dc2626;">{{ form.username.errors.0 }}</small>
+                        <small class="form-error">{{ form.username.errors.0 }}</small>
                     {% endif %}
                 </div>
 
                 <div class="form-group">
                     <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
-                    <div class="input-icon">
-                        {{ form.password|add_class:"form-control"|attr:"placeholder:Enter Password" }}
-                    </div>
+                    {{ form.password|add_class:"form-control"|attr:"placeholder:Enter Password" }}
                     {% if form.password.errors %}
-                        <small style="color: #dc2626;">{{ form.password.errors.0 }}</small>
+                        <small class="form-error">{{ form.password.errors.0 }}</small>
                     {% endif %}
                 </div>
 
                 <div class="form-group">
                     <label for="{{ form.vendor_id.id_for_label }}">{{ form.vendor_id.label }}</label>
-                    <div class="input-icon">
-                        {{ form.vendor_id|add_class:"form-control"|attr:"placeholder:Enter Vendor ID" }}
-                    </div>
+                    {{ form.vendor_id|add_class:"form-control"|attr:"placeholder:Enter Vendor ID" }}
                     {% if form.vendor_id.errors %}
-                        <small style="color: #dc2626;">{{ form.vendor_id.errors.0 }}</small>
+                        <small class="form-error">{{ form.vendor_id.errors.0 }}</small>
                     {% endif %}
                 </div>
 
                 {% if form.non_field_errors %}
-                    <div style="background: #fee2e2; color: #dc2626;
-                                padding: 12px; border-radius: 8px;
-                                margin-bottom: 20px; font-size: 14px;">
+                    <div class="form-nonfield-error">
                         {{ form.non_field_errors.0 }}
                     </div>
                 {% endif %}
@@ -75,43 +66,33 @@
     </div>
 </div>
 
+<style> p {color: white;}</style>
+
 <script>
+    // Snackbar functionality
     function closeSnackbar() {
         const snackbar = document.getElementById("snackbar");
-        if (snackbar) {
-            snackbar.classList.remove("show");
-        }
+        if (snackbar) snackbar.classList.remove("show");
     }
-
     window.addEventListener("load", () => {
         const snackbar = document.getElementById("snackbar");
         if (snackbar && snackbar.classList.contains("show")) {
-            setTimeout(() => {
-                snackbar.classList.remove("show");
-            }, 4000);
+            setTimeout(() => snackbar.classList.remove("show"), 4000);
+        }
+    });
+
+    // Button feedback animation
+    document.addEventListener("DOMContentLoaded", () => {
+        const loginForm = document.querySelector("form");
+        const loginButton = document.querySelector(".btn-login");
+        if (loginForm && loginButton) {
+            loginForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                loginButton.classList.add("success");
+                loginButton.textContent = "Success!";
+                setTimeout(() => loginForm.submit(), 800);
+            });
         }
     });
 </script>
-
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const loginForm = document.querySelector("form");
-    const loginButton = document.querySelector(".btn-login");
-
-    if (loginForm && loginButton) {
-        loginForm.addEventListener("submit", (e) => {
-            e.preventDefault(); 
-
-            loginButton.classList.add("success");
-            loginButton.textContent = "Success!";
-            
-            setTimeout(() => {
-                loginForm.submit(); // proceed normally after showing success color
-            }, 800);
-        });
-    }
-});
-</script>
-
 {% endblock %}

@@ -1,205 +1,15 @@
+/* ===== Global Styles ===== */
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.login-card {
-    /* Layout & Sizing */
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-    overflow: hidden;
-    max-width: 400px;
-    width: 100%;
-    padding: 0;
-    margin: 0 auto;
-    text-align: center;
-}
-
-.login-header {
-    /* Layout & Spacing */
-    background: #8b4d23;
-    padding: 15px 10px;
-    text-align: center;
-
-    /* Typography */
-    color: white;
-}
-
-.login-header h2 {
-    /* Typography */
-    margin: 0;
-    font-size: 24px; /* smaller header */
-    font-weight: 600;
-}
-
-.login-body {
-    /* Spacing */
-    padding: 15px 15px;
-}
-
-/* Horizontal row container for fields */
-.form-row {
-    /* Layout */
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.form-row .form-group {
-    /* Layout & Sizing */
-    flex: 1;
-    min-width: 160px;
-}
-
-.form-row .form-control {
-    /* Sizing */
-    width: 100%;
-}
-
-/* Default form-group styling */
-.form-group {
-    /* Spacing */
-    margin-bottom: 14px;
-}
-
-.form-group label {
-    /* Typography */
-    font-size: 13px;
-    font-weight: 500;
-    color: #344054;
-}
-
-/* Inputs */
-.form-control {
-    /* Spacing & Sizing */
-    padding: 7px 10px;
-    border-radius: 8px;
-
-    /* Border & Box */
-    border: 2px solid #e5e7eb;
-    box-sizing: border-box;
-
-    /* Typography */
-    font-size: 14px;
-}
-
-/* Button */
-.btn-login {
-    /* Sizing & Spacing */
-    width: 50%;
-    padding: 10px;
-    margin-top: 10px;
-    margin: 10px auto 0;
-    display: block;
-
-    /* Border & Radius */
-    border-radius: 8px;
-    border: none;
-
-    /* Typography */
-    font-size: 15px;
-    font-weight: 600;
-
-    /* Colors & Background */
-    background-color: #8b4d23;
-    color: white;
-
-    /* Cursor */
-    cursor: pointer;
-}
-
-/* Radio buttons */
-.radio-group {
-    /* Layout */
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    align-items: center;
-}
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
-    .login-card {
-        /* Sizing */
-        max-width: 360px;
-    }
-
-    .form-row {
-        /* Layout adjustments */
-        flex-direction: column;
-        gap: 10px;
-    }
-}
-
-/* Snackbar / messages */
-#snackbar {
-    /* Sizing & Spacing */
-    min-width: 250px;
-    max-width: 90%;
-    margin: 15px auto 0;
-    padding: 12px 18px;
-    border-radius: 8px;
-
-    /* Typography */
-    color: white;
-    font-weight: 500;
-    text-align: center;
-
-    /* Display & Position */
-    display: none;
-    position: relative;
-    opacity: 0;
-    transition: opacity 0.5s ease, transform 0.5s ease;
-
-    /* Box shadow */
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-#snackbar.show {
-    /* Display & Animation */
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
-}
-
-#snackbar.success { background-color: #ed8b13; }
-#snackbar.error   { background-color: #b91c1c; }
-#snackbar.warning { background-color: #f59e0b; }
-#snackbar.info    { background-color: #2563eb; }
-
-#snackbar .close-btn {
-    /* Positioning & Cursor */
-    position: absolute;
-    top: 5px;
-    right: 8px;
-    cursor: pointer;
-
-    /* Typography */
-    font-weight: bold;
-}
-
-.form-control::placeholder {
-    /* Text alignment */
-    text-align: center;
-}
-
-.form-control {
-    /* Text alignment */
-    text-align: center;
-}
-
-
-/*Keagan added*/
-/*Keagan added*/
-/*Keagan added*/
-
-/* ===== Background Setup ===== */
-body {
-    background: url('https://png.pngtree.com/background/20230518/original/pngtree-bakery-with-many-different-types-of-items-behind-glass-picture-image_2645229.jpg')
-                no-repeat center center fixed;
-    background-size: cover;
     margin: 0;
     font-family: 'Poppins', sans-serif;
+    background: url('https://png.pngtree.com/background/20230518/original/pngtree-bakery-with-many-different-types-of-items-behind-glass-picture-image_2645229.jpg') 
+                no-repeat center center fixed;
+    background-size: cover;
+}
+
+p {
+    color: white;
+    margin-bottom: 1rem;
 }
 
 /* ===== Center Form Container ===== */
@@ -209,6 +19,7 @@ body {
     align-items: center;
     min-height: 100vh;
     padding: 20px;
+    animation: fadeIn 1s ease;
 }
 
 /* ===== Glass Effect Card ===== */
@@ -221,6 +32,8 @@ body {
     padding: 50px 45px;
     width: 420px;
     color: #fff;
+    transform: translateY(-20px);
+    animation: slideUp 0.7s forwards;
 }
 
 /* ===== Header ===== */
@@ -233,7 +46,6 @@ body {
     font-size: 2em;
     font-weight: 600;
     color: #ffffff;
-    background: none;
     margin-bottom: 8px;
 }
 
@@ -245,7 +57,15 @@ body {
 /* ===== Form Fields ===== */
 .form-group {
     margin-bottom: 22px;
+    opacity: 0;
+    transform: translateX(-20px);
+    animation: fieldFade 0.5s forwards;
 }
+
+.form-group:nth-child(1) { animation-delay: 0.2s; }
+.form-group:nth-child(2) { animation-delay: 0.35s; }
+.form-group:nth-child(3) { animation-delay: 0.5s; }
+.form-group:nth-child(4) { animation-delay: 0.65s; }
 
 label {
     display: block;
@@ -264,6 +84,7 @@ label {
     background: rgba(255, 255, 255, 0.9);
     color: #222;
     font-size: 15px;
+    text-align: center;
 }
 
 .form-control::placeholder {
@@ -317,6 +138,7 @@ label {
 
 .btn-login.success {
     background: #28a745 !important; /* green when success */
+    transform: scale(1.05);
 }
 
 /* ===== Footer ===== */
@@ -337,7 +159,7 @@ label {
     text-decoration: underline;
 }
 
-/* ===== Snackbar ===== */
+/* ===== Snackbar / Messages ===== */
 #snackbar {
     position: fixed;
     bottom: 30px;
@@ -349,9 +171,11 @@ label {
     border-radius: 8px;
     font-size: 14px;
     z-index: 999;
+    display: none;
 }
 
 #snackbar.show {
+    display: block;
     animation: fadein 0.5s, fadeout 0.5s 3.5s;
 }
 
@@ -360,7 +184,21 @@ label {
     cursor: pointer;
 }
 
-/* ===== Animations ===== */
+/* ===== Field & Card Animations ===== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fieldFade {
+    to { opacity: 1; transform: translateX(0); }
+}
+
 @keyframes fadein {
     from { bottom: 0; opacity: 0; }
     to { bottom: 30px; opacity: 1; }
@@ -369,4 +207,17 @@ label {
 @keyframes fadeout {
     from { bottom: 30px; opacity: 1; }
     to { bottom: 0; opacity: 0; }
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-width: 480px) {
+    .login-card {
+        width: 90%;
+        padding: 30px 25px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
 }
