@@ -187,3 +187,186 @@ body {
     /* Text alignment */
     text-align: center;
 }
+
+
+/*Keagan added*/
+/*Keagan added*/
+/*Keagan added*/
+
+/* ===== Background Setup ===== */
+body {
+    background: url('https://png.pngtree.com/background/20230518/original/pngtree-bakery-with-many-different-types-of-items-behind-glass-picture-image_2645229.jpg')
+                no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* ===== Center Form Container ===== */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* ===== Glass Effect Card ===== */
+.login-card,
+.glass-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    padding: 50px 45px;
+    width: 420px;
+    color: #fff;
+}
+
+/* ===== Header ===== */
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header h2 {
+    font-size: 2em;
+    font-weight: 600;
+    color: #ffffff;
+    background: none;
+    margin-bottom: 8px;
+}
+
+.login-header p {
+    font-size: 0.95em;
+    color: #f2f2f2;
+}
+
+/* ===== Form Fields ===== */
+.form-group {
+    margin-bottom: 22px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    color: #ffffff;
+    font-size: 0.95em;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    outline: none;
+    background: rgba(255, 255, 255, 0.9);
+    color: #222;
+    font-size: 15px;
+}
+
+.form-control::placeholder {
+    color: #666;
+}
+
+/* ===== Two-Column Form Layout ===== */
+.form-row {
+    display: flex;
+    gap: 18px;
+}
+
+.flex-half {
+    flex: 1;
+}
+
+/* ===== Radio Buttons ===== */
+.radio-group {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #fff;
+    font-size: 0.9em;
+}
+
+/* ===== Button ===== */
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background: #7b3f00; /* brown */
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+    background: #8b4513;
+}
+
+.btn-login.success {
+    background: #28a745 !important; /* green when success */
+}
+
+/* ===== Footer ===== */
+.login-footer {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 0.95em;
+    color: #fff;
+}
+
+.login-footer a {
+    color: #ffb84d;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ===== Snackbar ===== */
+#snackbar {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(50, 50, 50, 0.9);
+    color: #fff;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 999;
+}
+
+#snackbar.show {
+    animation: fadein 0.5s, fadeout 0.5s 3.5s;
+}
+
+.close-btn {
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+/* ===== Animations ===== */
+@keyframes fadein {
+    from { bottom: 0; opacity: 0; }
+    to { bottom: 30px; opacity: 1; }
+}
+
+@keyframes fadeout {
+    from { bottom: 30px; opacity: 1; }
+    to { bottom: 0; opacity: 0; }
+}

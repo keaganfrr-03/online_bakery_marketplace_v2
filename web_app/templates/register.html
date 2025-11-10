@@ -39,33 +39,33 @@
                     </div>
                 </div>
 
-                <!-- Cell -->
-                <div class="form-group">
-                    <label for="{{ form.cell.id_for_label }}">{{ form.cell.label }}</label>
-                    <div class="input-icon">
-                        {{ form.cell|add_class:"form-control"|attr:"placeholder:e.g. +1234567890" }}
+                <!-- Cell + User Type -->
+                <div class="form-row">
+                    <div class="form-group flex-half">
+                        <label for="{{ form.cell.id_for_label }}">{{ form.cell.label }}</label>
+                        <div class="input-icon">
+                            {{ form.cell|add_class:"form-control"|attr:"placeholder:e.g. +1234567890" }}
+                        </div>
+                        {% if form.cell.errors %}
+                            <small style="color: #dc2626;">{{ form.cell.errors.0 }}</small>
+                        {% endif %}
                     </div>
-                    {% if form.cell.errors %}
-                        <small style="color: #dc2626;">{{ form.cell.errors.0 }}</small>
-                    {% endif %}
-                </div>
 
-                <!-- User Type -->
-                <div class="form-group">
-                    <label>{{ form.user_type.label }}</label>
-                    <div class="radio-group">
-                        {% for choice in form.user_type %}
-                            <label class="radio-option">
-                                {{ choice.tag }}
-                                {{ choice.choice_label }}
-                            </label>
-                        {% endfor %}
+                    <div class="form-group flex-half">
+                        <label>{{ form.user_type.label }}</label>
+                        <div class="radio-group">
+                            {% for choice in form.user_type %}
+                                <label class="radio-option">
+                                    {{ choice.tag }}
+                                    {{ choice.choice_label }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.user_type.errors %}
+                            <small style="color: #dc2626;">{{ form.user_type.errors.0 }}</small>
+                        {% endif %}
                     </div>
-                    {% if form.user_type.errors %}
-                        <small style="color: #dc2626;">{{ form.user_type.errors.0 }}</small>
-                    {% endif %}
                 </div>
-
 
                 <!-- Password + Confirm Password -->
                 <div class="form-row">
@@ -108,4 +108,22 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.querySelector("form");
+    const button = document.querySelector(".btn-login");
+
+    if (form && button) {
+        form.addEventListener("submit", (e) => {
+            e.preventDefault(); // remove once backend active
+            button.classList.add("success");
+            button.textContent = "Registered!";
+            setTimeout(() => {
+                form.submit();
+            }, 800);
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{% static 'css/forms.css' %}">
 
 <div class="login-container">
-    <div class="login-card">
+    <div class="login-card glass-card">
         <div class="login-header">
             <h2>Welcome Back</h2>
             <p>Please login to your account</p>
@@ -92,4 +92,26 @@
         }
     });
 </script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const loginForm = document.querySelector("form");
+    const loginButton = document.querySelector(".btn-login");
+
+    if (loginForm && loginButton) {
+        loginForm.addEventListener("submit", (e) => {
+            e.preventDefault(); 
+
+            loginButton.classList.add("success");
+            loginButton.textContent = "Success!";
+            
+            setTimeout(() => {
+                loginForm.submit(); // proceed normally after showing success color
+            }, 800);
+        });
+    }
+});
+</script>
+
 {% endblock %}
