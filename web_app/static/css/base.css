@@ -1,5 +1,11 @@
 body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: white;
+  
+}
+
+p {
+    color: white;
 }
 
 /* === Navbar & Footer === */
@@ -50,3 +56,4 @@ footer .bg-dark {
 .sidebar.default-theme .nav-link:hover {
     color: #0d6efd;
 }
+

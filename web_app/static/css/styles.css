@@ -1,11 +1,37 @@
+/* ===================================
+   GENERAL STYLES
+   =================================== */
+* {
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+
+
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: #faf6f1;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: #8b4d23;
+    margin-bottom: 1rem;
+}
+
+p1 {
+    color: white;
+}
+
+p {
+    color: #555;
+    margin-bottom: 1rem;
 }
 
 .text-brown {
-    color: #8b4d23;
-}
-i.text-brown {
     color: #8b4d23;
 }
 .bg-brown {
@@ -18,53 +44,72 @@ i.text-brown {
     text-shadow: 2px 2px 12px rgba(0,0,0,0.3);
 }
 
-/* Hero Section */
+/* ===================================
+   HERO SECTIONS
+   =================================== */
 .hero-section {
-    background: linear-gradient(135deg, #8b4d23 0%, #5C3317 100%);
     height: 400px;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
     overflow: hidden;
 }
 
-.hero-section::before {
+.hero-section::before,
+.hero-contact::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: url("/static/images/bakery-bg.jpg") center/cover no-repeat;
+    background-size: cover;
+    background-position: center;
     opacity: 0.2;
+    transition: transform 0.5s ease, opacity 0.5s ease;
 }
 
+.hero-section::before {
+    background: url("/static/images/bakery-bg.jpg") center/cover no-repeat;
+}
+.hero-contact::before {
+    background: url("/static/images/contact-bg.jpg") center/cover no-repeat;
+    opacity: 0.15;
+}
+
+.hero-section:hover::before,
+.hero-contact:hover::before {
+    transform: scale(1.05);
+    opacity: 0.25;
+}
 
 .hero-content {
     position: relative;
     z-index: 2;
 }
 
-.hero-section h1 {
+.hero-section h1,
+.hero-contact h1 {
     font-size: 3.5rem;
     font-weight: 700;
     margin-bottom: 1rem;
 }
 
-.hero-section p {
+.hero-section p,
+.hero-contact p {
     font-size: 1.3rem;
     font-weight: 300;
 }
 
-/* Story Section */
+/* ===================================
+   STORY SECTION
+   =================================== */
 .story-section {
     padding: 80px 0;
-    background: white;
-}
-
-.story-card {
-    border: none;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 10px 40px rgba(139, 77, 35, 0.1);
+    background: #fff;
 }
 
 .story-image {
@@ -73,28 +118,27 @@ i.text-brown {
     object-fit: cover;
     border-radius: 20px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-    transition: transform 0.3s ease;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
 .story-image:hover {
-    transform: scale(1.05);
+    transform: scale(1.07) rotate(0.5deg);
+    box-shadow: 0 14px 36px rgba(0,0,0,0.25);
 }
 
 .story-content h3 {
-    color: #8b4d23;
     font-size: 2rem;
-    font-weight: 700;
     margin-bottom: 1.5rem;
 }
 
 .story-content p {
-    color: #555;
     font-size: 1.1rem;
     line-height: 1.8;
-    margin-bottom: 1.2rem;
 }
 
-/* Platform Features */
+/* ===================================
+   PLATFORM FEATURES
+   =================================== */
 .platform-section {
     padding: 80px 0;
     background: linear-gradient(135deg, #f5ebe0 0%, #faf6f1 100%);
@@ -102,10 +146,9 @@ i.text-brown {
 }
 
 .platform-section h3 {
-    color: #8b4d23;
     font-size: 2.5rem;
-    font-weight: 700;
     margin-bottom: 3rem;
+    text-align: center;
 }
 
 .feature-card {
@@ -113,58 +156,52 @@ i.text-brown {
     border-radius: 15px;
     padding: 2.5rem 1.5rem;
     height: 100%;
-    transition: all 0.3s ease;
-    box-shadow: 0 5px 15px rgba(139, 77, 35, 0.08);
+    box-shadow: 0 5px 15px rgba(139,77,35,0.08);
     border: 2px solid transparent;
+    transition: transform 0.4s ease, box-shadow 0.4s ease, border 0.4s ease;
+    text-align: center;
+    cursor: pointer;
 }
 
 .feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(139, 77, 35, 0.2);
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 18px 40px rgba(139,77,35,0.25);
     border-color: #8b4d23;
 }
 
 .feature-card i {
     font-size: 3rem;
     color: #8b4d23;
-    margin-bottom: 1.5rem;
-    display: block;
+    margin-bottom: 1rem;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.feature-card:hover i {
+    transform: rotate(15deg) scale(1.2);
+    color: #5C3317;
 }
 
 .feature-card h5 {
-    color: #8b4d23;
     font-size: 1.3rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
 }
 
 .feature-card p {
-    color: #666;
     font-size: 1rem;
-    line-height: 1.6;
+    color: #666;
 }
 
-/* Promise Section */
+/* ===================================
+   PROMISE SECTION
+   =================================== */
 .promise-section {
     background: white;
     padding: 60px 40px;
     border-radius: 20px;
     margin: 60px 0;
-    box-shadow: 0 10px 40px rgba(139, 77, 35, 0.1);
-}
-
-.promise-section h3 {
-    color: #8b4d23;
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-}
-
-.promise-section p {
-    color: #555;
-    font-size: 1.15rem;
-    line-height: 1.9;
-    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 40px rgba(139,77,35,0.1);
+    text-align: center;
 }
 
 .promise-highlight {
@@ -175,20 +212,20 @@ i.text-brown {
     margin-top: 2rem;
     font-size: 1.3rem;
     font-weight: 500;
-    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Team Section */
+.promise-highlight:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+}
+
+/* ===================================
+   TEAM SECTION
+   =================================== */
 .team-section {
     padding: 80px 0 60px;
     background: white;
-}
-
-.team-section h3 {
-    color: #8b4d23;
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 3rem;
 }
 
 .team-card {
@@ -196,15 +233,15 @@ i.text-brown {
     border-radius: 20px;
     padding: 2rem;
     text-align: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 5px 20px rgba(139, 77, 35, 0.1);
+    transition: all 0.4s ease;
+    box-shadow: 0 5px 20px rgba(139,77,35,0.1);
     border: 2px solid transparent;
-    height: 100%;
+    cursor: pointer;
 }
 
 .team-card:hover {
-    transform: translateY(-12px);
-    box-shadow: 0 15px 40px rgba(139, 77, 35, 0.25);
+    transform: translateY(-14px) scale(1.02);
+    box-shadow: 0 18px 45px rgba(139,77,35,0.3);
     border-color: #8b4d23;
 }
 
@@ -215,88 +252,31 @@ i.text-brown {
     border-radius: 50%;
     margin-bottom: 1.5rem;
     border: 4px solid #8b4d23;
-    transition: transform 0.3s ease;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
 .team-card:hover img {
-    transform: scale(1.1);
-}
-
-.team-card h5 {
-    color: #8b4d23;
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-
-.team-card p {
-    color: #666;
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
+    transform: scale(1.15);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 .team-card .social-links a {
-    color: #8b4d23;
     font-size: 1.5rem;
     margin: 0 0.5rem;
-    transition: all 0.3s ease;
+    color: #8b4d23;
+    transition: transform 0.3s ease, color 0.3s ease;
 }
 
 .team-card .social-links a:hover {
     color: #5C3317;
-    transform: scale(1.2);
-    display: inline-block;
+    transform: scale(1.3) rotate(-5deg);
 }
 
-/* Animations */
-@keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(30px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scaleUp {
-    0% { opacity: 0; transform: scale(0.9); }
-    100% { opacity: 1; transform: scale(1); }
-}
-
-.animate-fade-in {
-    animation: fadeIn 1s ease forwards;
-}
-
-.animate-scale-up {
-    animation: scaleUp 0.8s ease forwards;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .hero-section h1 {
-        font-size: 2.5rem;
-    }
-
-    .hero-section p {
-        font-size: 1.1rem;
-    }
-
-    .story-image {
-        height: 250px;
-        margin-bottom: 2rem;
-    }
-
-    .feature-card {
-        margin-bottom: 1.5rem;
-    }
-}
-
-/* Contact Page Hero Background */
-.hero-contact::before {
-    background: url("/static/images/contact-bg.jpg") center/cover no-repeat;
-    opacity: 0.15; /* slightly lighter than main hero */
-}
-
-/* Contact Section */
+/* ===================================
+   CONTACT SECTION
+   =================================== */
 .contact-section {
     padding: 80px 0;
-    background: #faf6f1;
 }
 
 .contact-card {
@@ -305,26 +285,25 @@ i.text-brown {
     overflow: hidden;
     padding: 2rem;
     box-shadow: 0 10px 40px rgba(139,77,35,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.form-section h3,
-.info-section h3 {
-    color: #8b4d23;
-}
-
-.form-section .btn-brown {
-    max-width: 450px;
-    margin: 1rem auto 0;
-    display: block;
+.contact-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 50px rgba(139,77,35,0.2);
 }
 
 .form-control {
     border-radius: 12px;
     border: 1px solid #ddd;
+    padding: 0.8rem;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
 }
 
-textarea.form-control {
-    resize: none;
+.form-control:focus {
+    border-color: #8b4d23;
+    box-shadow: 0 0 10px rgba(139,77,35,0.2);
+    outline: none;
 }
 
 .btn-brown {
@@ -334,28 +313,26 @@ textarea.form-control {
     border-radius: 10px;
     padding: 0.7rem 1.5rem;
     font-weight: 600;
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .btn-brown:hover {
     background: #5C3317;
-}
-
-/* Contact Info Cards */
-.info-section {
-    padding: 2rem;
-}
-
-.contact-info-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 5px 15px rgba(139,77,35,0.3);
 }
 
 .contact-info-item i {
     font-size: 1.5rem;
     color: #8b4d23;
+    margin-top: 2px;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.contact-info-item:hover i {
+    transform: scale(1.2);
+    color: #5C3317;
 }
 
 .contact-info-item strong {
@@ -363,40 +340,17 @@ textarea.form-control {
     color: #8b4d23;
 }
 
-.social-section .social-links a {
-    font-size: 1.5rem;
-    margin-right: 1rem;
-    color: #8b4d23;
-    transition: all 0.3s ease;
+/* ===================================
+   ANIMATIONS
+   =================================== */
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 
-.social-section .social-links a:hover {
-    color: #5C3317;
-    transform: scale(1.2);
-    display: inline-block;
-}
-
-/* Map Section */
-.map-section {
-    padding: 60px 0;
-}
-
-.map-container {
-    width: 100%;
-    height: 350px;
-    border-radius: 20px;
-    overflow: hidden;
-    background: #f5ebe0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    color: #8b4d23;
-}
-
-.map-placeholder i {
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
+@keyframes scaleUp {
+    0% { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes slideLeft {
@@ -409,10 +363,56 @@ textarea.form-control {
     100% { opacity: 1; transform: translateX(0); }
 }
 
+.animate-fade-in {
+    animation: fadeIn 1s ease forwards;
+}
+
+.animate-scale-up {
+    animation: scaleUp 0.8s ease forwards;
+}
+
 .animate-slide-left {
     animation: slideLeft 1s ease forwards;
 }
 
 .animate-slide-right {
     animation: slideRight 1s ease forwards;
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+@media (max-width: 992px) {
+    .hero-section h1,
+    .hero-contact h1 {
+        font-size: 2.8rem;
+    }
+    .hero-section p,
+    .hero-contact p {
+        font-size: 1.1rem;
+    }
+    .story-image {
+        height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-section h1,
+    .hero-contact h1 {
+        font-size: 2.2rem;
+    }
+    .hero-section p,
+    .hero-contact p {
+        font-size: 1rem;
+    }
+    .story-image {
+        height: 250px;
+        margin-bottom: 2rem;
+    }
+    .feature-card, .team-card {
+        margin-bottom: 2rem;
+    }
+    .contact-card .row {
+        flex-direction: column;
+    }
 }

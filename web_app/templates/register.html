@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{% static 'css/forms.css' %}">
 
 <div class="login-container">
-    <div class="login-card">
+    <div class="login-card glass-card">
         <div class="login-header">
             <h2>Create an Account</h2>
         </div>
@@ -28,84 +28,71 @@
             <form method="post">
                 {% csrf_token %}
 
-                <!-- Username + Email -->
                 <div class="form-row">
                     <div class="form-group flex-half">
                         <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
-                        <div class="input-icon">
-                            {{ form.username|add_class:"form-control"|attr:"placeholder:Enter Username" }}
-                        </div>
+                        {{ form.username|add_class:"form-control"|attr:"placeholder:Enter Username" }}
                         {% if form.username.errors %}
-                            <small style="color: #dc2626;">{{ form.username.errors.0 }}</small>
+                            <small class="form-error">{{ form.username.errors.0 }}</small>
                         {% endif %}
                     </div>
 
                     <div class="form-group flex-half">
                         <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
-                        <div class="input-icon">
-                            {{ form.email|add_class:"form-control"|attr:"placeholder:Enter Email Address" }}
-                        </div>
+                        {{ form.email|add_class:"form-control"|attr:"placeholder:Enter Email" }}
                         {% if form.email.errors %}
-                            <small style="color: #dc2626;">{{ form.email.errors.0 }}</small>
+                            <small class="form-error">{{ form.email.errors.0 }}</small>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Cell -->
-                <div class="form-group">
-                    <label for="{{ form.cell.id_for_label }}">{{ form.cell.label }}</label>
-                    <div class="input-icon">
-                        {{ form.cell|add_class:"form-control"|attr:"placeholder:Enter Mobile Number" }}
+                <div class="form-row">
+                    <div class="form-group flex-half">
+                        <label for="{{ form.cell.id_for_label }}">{{ form.cell.label }}</label>
+                        <div class="input-icon">
+                            {{ form.cell|add_class:"form-control"|attr:"placeholder:e.g. +1234567890" }}
+                        </div>
+                        {% if form.cell.errors %}
+                            <small class="form-error">{{ form.cell.errors.0 }}</small>
+                        {% endif %}
                     </div>
-                    {% if form.cell.errors %}
-                        <small style="color: #dc2626;">{{ form.cell.errors.0 }}</small>
-                    {% endif %}
+
+                    <div class="form-group flex-half">
+                        <label>{{ form.user_type.label }}</label>
+                        <div class="radio-group">
+                            {% for choice in form.user_type %}
+                                <label class="radio-option">
+                                    {{ choice.tag }}
+                                    {{ choice.choice_label }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {% if form.user_type.errors %}
+                            <small style="color: #dc2626;">{{ form.user_type.errors.0 }}</small>
+                        {% endif %}
+                    </div>
                 </div>
 
-                <!-- User Type -->
-                <div class="form-group">
-                    <label>{{ form.user_type.label }}</label>
-                    <div class="radio-group">
-                        {% for choice in form.user_type %}
-                            <label class="radio-option">
-                                {{ choice.tag }}
-                                {{ choice.choice_label }}
-                            </label>
-                        {% endfor %}
-                    </div>
-                    {% if form.user_type.errors %}
-                        <small style="color: #dc2626;">{{ form.user_type.errors.0 }}</small>
-                    {% endif %}
-                </div>
-
-                <!-- Password + Confirm Password -->
                 <div class="form-row">
                     <div class="form-group flex-half">
                         <label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
-                        <div class="input-icon">
-                            {{ form.password1|add_class:"form-control"|attr:"placeholder:Create a password" }}
-                        </div>
+                        {{ form.password1|add_class:"form-control"|attr:"placeholder:Create a password" }}
                         {% if form.password1.errors %}
-                            <small style="color: #dc2626;">{{ form.password1.errors.0 }}</small>
+                            <small class="form-error">{{ form.password1.errors.0 }}</small>
                         {% endif %}
                     </div>
 
                     <div class="form-group flex-half">
                         <label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
-                        <div class="input-icon">
-                            {{ form.password2|add_class:"form-control"|attr:"placeholder:Confirm your password" }}
-                        </div>
+                        {{ form.password2|add_class:"form-control"|attr:"placeholder:Confirm your password" }}
                         {% if form.password2.errors %}
-                            <small style="color: #dc2626;">{{ form.password2.errors.0 }}</small>
+                            <small class="form-error">{{ form.password2.errors.0 }}</small>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Non-field errors -->
                 {% if form.non_field_errors %}
-                    <div style="background: #fee2e2; color: #dc2626;
-                                padding: 12px; border-radius: 8px;
-                                margin-bottom: 20px; font-size: 14px;">
+                    <div class="form-nonfield-error">
                         {{ form.non_field_errors.0 }}
                     </div>
                 {% endif %}
@@ -119,4 +106,19 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.querySelector("form");
+        const button = document.querySelector(".btn-login");
+        if (form && button) {
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                button.classList.add("success");
+                button.textContent = "Registered!";
+                setTimeout(() => form.submit(), 800);
+            });
+        }
+    });
+</script>
 {% endblock %}

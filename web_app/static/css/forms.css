@@ -1,189 +1,223 @@
+/* ===== Global Styles ===== */
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: url('https://png.pngtree.com/background/20230518/original/pngtree-bakery-with-many-different-types-of-items-behind-glass-picture-image_2645229.jpg') 
+                no-repeat center center fixed;
+    background-size: cover;
 }
 
-.login-card {
-    /* Layout & Sizing */
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-    overflow: hidden;
-    max-width: 400px;
-    width: 100%;
-    padding: 0;
-    margin: 0 auto;
-    text-align: center;
-}
-
-.login-header {
-    /* Layout & Spacing */
-    background: #8b4d23;
-    padding: 15px 10px;
-    text-align: center;
-
-    /* Typography */
+p {
     color: white;
+    margin-bottom: 1rem;
+}
+
+/* ===== Center Form Container ===== */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    animation: fadeIn 1s ease;
+}
+
+/* ===== Glass Effect Card ===== */
+.login-card,
+.glass-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    padding: 50px 45px;
+    width: 420px;
+    color: #fff;
+    transform: translateY(-20px);
+    animation: slideUp 0.7s forwards;
+}
+
+/* ===== Header ===== */
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
 }
 
 .login-header h2 {
-    /* Typography */
-    margin: 0;
-    font-size: 24px; /* smaller header */
+    font-size: 2em;
     font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 8px;
 }
 
-.login-body {
-    /* Spacing */
-    padding: 15px 15px;
+.login-header p {
+    font-size: 0.95em;
+    color: #f2f2f2;
 }
 
-/* Horizontal row container for fields */
-.form-row {
-    /* Layout */
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.form-row .form-group {
-    /* Layout & Sizing */
-    flex: 1;
-    min-width: 160px;
-}
-
-.form-row .form-control {
-    /* Sizing */
-    width: 100%;
-}
-
-/* Default form-group styling */
+/* ===== Form Fields ===== */
 .form-group {
-    /* Spacing */
-    margin-bottom: 14px;
-}
-
-.form-group label {
-    /* Typography */
-    font-size: 13px;
-    font-weight: 500;
-    color: #344054;
-}
-
-/* Inputs */
-.form-control {
-    /* Spacing & Sizing */
-    padding: 7px 10px;
-    border-radius: 8px;
-
-    /* Border & Box */
-    border: 2px solid #e5e7eb;
-    box-sizing: border-box;
-
-    /* Typography */
-    font-size: 14px;
-}
-
-/* Button */
-.btn-login {
-    /* Sizing & Spacing */
-    width: 50%;
-    padding: 10px;
-    margin-top: 10px;
-    margin: 10px auto 0;
-    display: block;
-
-    /* Border & Radius */
-    border-radius: 8px;
-    border: none;
-
-    /* Typography */
-    font-size: 15px;
-    font-weight: 600;
-
-    /* Colors & Background */
-    background-color: #8b4d23;
-    color: white;
-
-    /* Cursor */
-    cursor: pointer;
-}
-
-/* Radio buttons */
-.radio-group {
-    /* Layout */
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    align-items: center;
-}
-
-/* Responsive adjustments */
-@media (max-width: 480px) {
-    .login-card {
-        /* Sizing */
-        max-width: 360px;
-    }
-
-    .form-row {
-        /* Layout adjustments */
-        flex-direction: column;
-        gap: 10px;
-    }
-}
-
-/* Snackbar / messages */
-#snackbar {
-    /* Sizing & Spacing */
-    min-width: 250px;
-    max-width: 90%;
-    margin: 15px auto 0;
-    padding: 12px 18px;
-    border-radius: 8px;
-
-    /* Typography */
-    color: white;
-    font-weight: 500;
-    text-align: center;
-
-    /* Display & Position */
-    display: none;
-    position: relative;
+    margin-bottom: 22px;
     opacity: 0;
-    transition: opacity 0.5s ease, transform 0.5s ease;
-
-    /* Box shadow */
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transform: translateX(-20px);
+    animation: fieldFade 0.5s forwards;
 }
 
-#snackbar.show {
-    /* Display & Animation */
+.form-group:nth-child(1) { animation-delay: 0.2s; }
+.form-group:nth-child(2) { animation-delay: 0.35s; }
+.form-group:nth-child(3) { animation-delay: 0.5s; }
+.form-group:nth-child(4) { animation-delay: 0.65s; }
+
+label {
     display: block;
-    opacity: 1;
-    transform: translateY(0);
+    margin-bottom: 8px;
+    color: #ffffff;
+    font-size: 0.95em;
+    font-weight: 500;
 }
 
-#snackbar.success { background-color: #ed8b13; }
-#snackbar.error   { background-color: #b91c1c; }
-#snackbar.warning { background-color: #f59e0b; }
-#snackbar.info    { background-color: #2563eb; }
-
-#snackbar .close-btn {
-    /* Positioning & Cursor */
-    position: absolute;
-    top: 5px;
-    right: 8px;
-    cursor: pointer;
-
-    /* Typography */
-    font-weight: bold;
+.form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    outline: none;
+    background: rgba(255, 255, 255, 0.9);
+    color: #222;
+    font-size: 15px;
+    text-align: center;
 }
 
 .form-control::placeholder {
-    /* Text alignment */
-    text-align: center;
+    color: #666;
 }
 
-.form-control {
-    /* Text alignment */
+/* ===== Two-Column Form Layout ===== */
+.form-row {
+    display: flex;
+    gap: 18px;
+}
+
+.flex-half {
+    flex: 1;
+}
+
+/* ===== Radio Buttons ===== */
+.radio-group {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #fff;
+    font-size: 0.9em;
+}
+
+/* ===== Button ===== */
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background: #7b3f00; /* brown */
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+    background: #8b4513;
+}
+
+.btn-login.success {
+    background: #28a745 !important; /* green when success */
+    transform: scale(1.05);
+}
+
+/* ===== Footer ===== */
+.login-footer {
     text-align: center;
+    margin-top: 25px;
+    font-size: 0.95em;
+    color: #fff;
+}
+
+.login-footer a {
+    color: #ffb84d;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ===== Snackbar / Messages ===== */
+#snackbar {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(50, 50, 50, 0.9);
+    color: #fff;
+    padding: 14px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 999;
+    display: none;
+}
+
+#snackbar.show {
+    display: block;
+    animation: fadein 0.5s, fadeout 0.5s 3.5s;
+}
+
+.close-btn {
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+/* ===== Field & Card Animations ===== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fieldFade {
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadein {
+    from { bottom: 0; opacity: 0; }
+    to { bottom: 30px; opacity: 1; }
+}
+
+@keyframes fadeout {
+    from { bottom: 30px; opacity: 1; }
+    to { bottom: 0; opacity: 0; }
+}
+
+/* ===== Responsive Adjustments ===== */
+@media (max-width: 480px) {
+    .login-card {
+        width: 90%;
+        padding: 30px 25px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
 }
