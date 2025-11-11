@@ -35,7 +35,8 @@ from .forms import (
     ProfileForm, VendorProfileForm, VendorSettingsForm,
     VendorLoginForm, VendorForm, CustomerForm, CategoryForm, ProductForm, OrderForm, AdminVendorFullForm
 )
-from reportlab.pdfgen import canvas
+from django import get_version as django_version
+import sys
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Sum, Prefetch, F, DecimalField, ExpressionWrapper, Max, Count, Avg
@@ -197,11 +198,17 @@ class ProfileViewSet(viewsets.ModelViewSet):
 class RegisterForm(UserCreationForm):
     """Form for user registration"""
     email = forms.EmailField(required=True)
-    cell = forms.CharField(max_length=15, required=True, label="Cell Number")
+    cell = forms.CharField(
+        max_length=15,
+        required=False,  # Changed to not required
+        label="Cell Number",
+        initial=""  # Default empty value
+    )
     user_type = forms.ChoiceField(
         choices=[("customer", "Customer"), ("vendor", "Vendor")],
         widget=forms.RadioSelect,
-        required=True
+        required=True,
+        initial="customer"  # Set default to customer
     )
 
     class Meta:
@@ -216,7 +223,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.email = form.cleaned_data["email"]
-            user.cell = form.cleaned_data["cell"]
+            user.cell = form.cleaned_data.get("cell", "")  # Use get() with default empty string
             user.user_type = form.cleaned_data["user_type"]
             user.save()
 
@@ -235,8 +242,8 @@ def register_view(request):
                 # Display the vendor ID to the user
                 messages.success(
                     request,
-                    f"Account created successfully! Your Vendor ID is: <strong>{vendor_id}</strong>. "
-                    f"Please save this ID - you will need it to login."
+                    f"Account created successfully!"
+                    f"Your Vendor ID is: {vendor_id}."
                 )
             else:
                 messages.success(request, "Account created successfully. You can now log in.")
@@ -254,7 +261,6 @@ def register_view(request):
         form = RegisterForm()
 
     return render(request, "register.html", {"form": form})
-
 
 class CustomLoginView(LoginView):
     """Custom login view with cart persistence"""
@@ -496,7 +502,9 @@ def add_to_cart(request, product_id):
                 cart_item.quantity += qty
                 cart_item.save()
 
-            cart_count = Cart.objects.filter(user=request.user).count()
+            # Calculate total quantity (sum of all items)
+            cart_items = Cart.objects.filter(user=request.user)
+            cart_count = sum(item.quantity for item in cart_items)
 
             # Log add to cart
             log_activity(
@@ -531,7 +539,6 @@ def add_to_cart(request, product_id):
             return redirect("login")
 
     return redirect("index")
-
 
 def update_cart(request):
     """Update cart quantities or remove items"""
@@ -584,6 +591,12 @@ def cart_view(request):
     profile, _ = Profile.objects.get_or_create(user=user)
 
     if request.method == "POST":
+        # Handle AJAX request for cart count (total quantity)
+        if request.POST.get('get_cart_count'):
+            cart_items = Cart.objects.filter(user=user)
+            cart_count = sum(item.quantity for item in cart_items)
+            return JsonResponse({'cart_count': cart_count})
+
         product_id = request.POST.get("product_id")
         action = request.POST.get("action")
         qty_input = request.POST.get("quantity")
@@ -596,7 +609,8 @@ def cart_view(request):
                 if cart_item.quantity < product.stock_quantity:
                     cart_item.quantity += 1
                     cart_item.save()
-                    log_activity(user=user, action="Cart Increment", details=f"Incremented {product.name} in cart.", request=request)
+                    log_activity(user=user, action="Cart Increment", details=f"Incremented {product.name} in cart.",
+                                 request=request)
                 else:
                     messages.warning(request, f"Cannot add more. Only {product.stock_quantity} in stock.")
             elif action == "decrement":
@@ -604,24 +618,28 @@ def cart_view(request):
                 if cart_item.quantity <= 0:
                     cart_item.delete()
                     messages.info(request, f"{product.name} removed from cart.")
-                    log_activity(user=user, action="Cart Remove", details=f"{product.name} removed from cart.", request=request)
+                    log_activity(user=user, action="Cart Remove", details=f"{product.name} removed from cart.",
+                                 request=request)
                 else:
                     cart_item.save()
-                    log_activity(user=user, action="Cart Decrement", details=f"Decremented {product.name} in cart.", request=request)
+                    log_activity(user=user, action="Cart Decrement", details=f"Decremented {product.name} in cart.",
+                                 request=request)
             elif action == "update":
                 try:
                     new_qty = int(qty_input)
                     if new_qty <= 0:
                         cart_item.delete()
                         messages.info(request, f"{product.name} removed from cart.")
-                        log_activity(user=user, action="Cart Remove", details=f"{product.name} removed from cart (update).", request=request)
+                        log_activity(user=user, action="Cart Remove",
+                                     details=f"{product.name} removed from cart (update).", request=request)
                     elif new_qty > product.stock_quantity:
                         messages.warning(request, f"Cannot set quantity higher than stock ({product.stock_quantity}).")
                     else:
                         cart_item.quantity = new_qty
                         cart_item.save()
                         messages.success(request, f"{product.name} quantity updated.")
-                        log_activity(user=user, action="Cart Update", details=f"Updated {product.name} quantity to {new_qty}.", request=request)
+                        log_activity(user=user, action="Cart Update",
+                                     details=f"Updated {product.name} quantity to {new_qty}.", request=request)
                 except ValueError:
                     messages.error(request, "Invalid quantity input.")
 
@@ -645,7 +663,6 @@ def cart_view(request):
         "total": total,
         "profile": profile,
     })
-
 
 @require_POST
 @login_required(login_url='/accounts/login/')
@@ -1314,7 +1331,7 @@ def vendor_orders(request):
     return render(request, "vendor/vendor_orders.html", context)
 
 
-# This view is not being used for now
+# This view is not being used for now, I will need to come back for it in time
 @login_required
 def vendor_orders_view(request):
     """View vendor's pending orders with enhanced details"""
@@ -1325,6 +1342,10 @@ def vendor_orders_view(request):
     orders = get_vendor_orders(request.user, status_list=["pending"])
     log_activity(user=request.user, action="Viewed Vendor Orders (detailed)", details="Vendor accessed detailed orders.", request=request)
     return render(request, "vendor/orders.html", {"orders": orders})
+
+
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
 
 
 @login_required
@@ -1343,7 +1364,25 @@ def vendor_order_history(request):
         status__in=["paid", "cancelled"]
     ).order_by("-created_at")
 
-    # Calculate statistics
+    # Apply filters
+    customer_filter = request.GET.get('customer', '').strip()
+    order_number_filter = request.GET.get('order_number', '').strip()
+    status_filter = request.GET.get('status', '')
+
+    if customer_filter:
+        orders = orders.filter(
+            Q(user__username__icontains=customer_filter) |
+            Q(user__first_name__icontains=customer_filter) |
+            Q(user__last_name__icontains=customer_filter)
+        )
+
+    if order_number_filter:
+        orders = orders.filter(id__icontains=order_number_filter)
+
+    if status_filter and status_filter in ['paid', 'cancelled']:
+        orders = orders.filter(status=status_filter)
+
+    # Calculate statistics (based on all orders, not filtered)
     paid_count = all_vendor_orders.filter(status="paid").count()
     cancelled_count = all_vendor_orders.filter(status="cancelled").count()
 
@@ -1354,17 +1393,31 @@ def vendor_order_history(request):
         order.vendor_subtotal = order.vendor_subtotal(request.user)
         orders_with_vendor_data.append(order)
 
+    # Add pagination - 20 items per page
+    paginator = Paginator(orders_with_vendor_data, 20)
+    page = request.GET.get('page')
+
+    try:
+        paginated_orders = paginator.page(page)
+    except PageNotAnInteger:
+        paginated_orders = paginator.page(1)
+    except EmptyPage:
+        paginated_orders = paginator.page(paginator.num_pages)
+
     log_activity(
         user=request.user,
         action="Viewed Vendor Order History",
-        details=f"Vendor viewed order history ({orders.count()} orders).",
+        details=f"Vendor viewed order history (page {paginated_orders.number} of {paginator.num_pages}).",
         request=request
     )
 
     context = {
-        "orders": orders_with_vendor_data,
+        "orders": paginated_orders,
         "paid_count": paid_count,
         "cancelled_count": cancelled_count,
+        "customer_filter": customer_filter,
+        "order_number_filter": order_number_filter,
+        "status_filter": status_filter,
     }
 
     return render(request, "vendor/vendor_order_history.html", context)
@@ -1978,14 +2031,19 @@ def admin_dashboard(request):
     total_customers = CustomUser.objects.filter(user_type="customer").count()
 
     total_orders = Order.objects.count()
-    pending_orders = Order.objects.filter(status="Pending").count()
+    pending_orders = Order.objects.filter(status="pending").count()
     total_revenue = Order.objects.aggregate(total=Sum("total_price"))["total"] or 0
 
-    low_stock_threshold = 10
-    low_stock_products = Product.objects.filter(stock_quantity__lt=low_stock_threshold).count()
+    low_stock_threshold = 5
+    low_stock_products = Product.objects.filter(
+        stock_quantity__lte=low_stock_threshold
+    ).count()
 
     thirty_days_ago = timezone.now() - timedelta(days=30)
-    inactive_vendors = CustomUser.objects.filter(user_type="vendor", last_login__lt=thirty_days_ago).count()
+    inactive_vendors = CustomUser.objects.filter(
+        user_type="vendor",
+        last_login__lt=thirty_days_ago
+    ).count()
 
     context = {
         "total_products": total_products,
@@ -2012,6 +2070,33 @@ def admin_dashboard(request):
 def admin_all_products(request):
     products = Product.objects.select_related("vendor", "category").all()
 
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    category_id = request.GET.get('category', '')
+    vendor_id = request.GET.get('vendor', '')
+
+    # Apply filters
+    if search_query:
+        products = products.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+    if vendor_id:
+        products = products.filter(vendor_id=vendor_id)
+
+    # Get all categories and vendors for the filter dropdowns
+    categories = Category.objects.all()
+    vendors = CustomUser.objects.filter(user_type='vendor')
+
+    # Pagination
+    paginator = Paginator(products, 20)  # 20 products per page
+    page_number = request.GET.get('page')
+    products = paginator.get_page(page_number)
+
     log_activity(
         user=request.user,
         action="Viewed All Products",
@@ -2019,7 +2104,13 @@ def admin_all_products(request):
         request=request
     )
 
-    return render(request, "admins/admin_all_products.html", {"products": products})
+    context = {
+        'products': products,
+        'categories': categories,
+        'vendors': vendors,
+    }
+
+    return render(request, "admins/admin_all_products.html", context)
 
 
 @admin_required
@@ -2110,6 +2201,32 @@ def admin_product_delete(request, id):
 @admin_required
 def admin_vendors(request):
     vendors = CustomUser.objects.filter(user_type="vendor")
+
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+
+    # Apply search filter
+    if search_query:
+        vendors = vendors.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(profile__company_name__icontains=search_query) |
+            Q(profile__vendor_id__icontains=search_query)
+        )
+
+    # Apply status filter
+    if status_filter == 'active':
+        vendors = vendors.filter(is_active=True)
+    elif status_filter == 'inactive':
+        vendors = vendors.filter(is_active=False)
+
+    # Pagination
+    paginator = Paginator(vendors, 20)  # 20 vendors per page
+    page_number = request.GET.get('page')
+    vendors = paginator.get_page(page_number)
 
     log_activity(
         user=request.user,
@@ -2319,10 +2436,33 @@ def admin_customer_delete(request, id):
     return render(request, "admins/admin_customer_delete.html", {"customer": customer})
 
 
-
 @admin_required
 def admin_customers(request):
     customers = CustomUser.objects.filter(user_type="customer")
+
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+
+    # Apply search filter
+    if search_query:
+        customers = customers.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+
+    # Apply status filter
+    if status_filter == 'active':
+        customers = customers.filter(is_active=True)
+    elif status_filter == 'inactive':
+        customers = customers.filter(is_active=False)
+
+    # Pagination
+    paginator = Paginator(customers, 20)  # 20 customers per page
+    page_number = request.GET.get('page')
+    customers = paginator.get_page(page_number)
 
     log_activity(
         user=request.user,
@@ -2336,7 +2476,22 @@ def admin_customers(request):
 
 @admin_required
 def admin_categories(request):
-    admin_categories = Category.objects.all()
+    categories = Category.objects.all()
+
+    # Get search parameter
+    search_query = request.GET.get('search', '')
+
+    # Apply search filter
+    if search_query:
+        categories = categories.filter(name__icontains=search_query)
+
+    # Order by name
+    categories = categories.order_by('name')
+
+    # Pagination
+    paginator = Paginator(categories, 15)  # 20 categories per page
+    page_number = request.GET.get('page')
+    categories = paginator.get_page(page_number)
 
     log_activity(
         user=request.user,
@@ -2345,7 +2500,7 @@ def admin_categories(request):
         request=request
     )
 
-    return render(request, "admins/admin_categories.html", {"categories": admin_categories})
+    return render(request, "admins/admin_categories.html", {"categories": categories})
 
 
 @admin_required
@@ -2922,8 +3077,6 @@ def admin_report_delete(request, report_id):
     return redirect('admin_reports')
 
 
-from django import get_version as django_version
-import sys
 
 @admin_required
 def admin_settings(request):
@@ -2944,7 +3097,6 @@ def admin_settings(request):
     return render(request, "admins/admin_settings.html", context)
 
 
-
 @admin_required
 def admin_report_preview_generic(request):
     """Generic preview stub for admin"""
@@ -2959,11 +3111,63 @@ def activity_log_view(request):
         messages.error(request, "Access denied.")
         return redirect("index")
 
-    logs = ActivityLog.objects.select_related('user', 'user__profile').order_by('-timestamp')[:100]
+    logs = ActivityLog.objects.select_related('user', 'user__profile').all()
 
-    log_activity(user=request.user, action="Viewed Activity Logs", details=f"Admin viewed activity logs.", request=request)
+    # Get filter parameters
+    search_query = request.GET.get('search', '')
+    user_type_filter = request.GET.get('user_type', '')
+    action_filter = request.GET.get('action', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
 
-    return render(request, "admins/activity_logs.html", {"logs": logs})
+    # Apply search filter
+    if search_query:
+        logs = logs.filter(
+            Q(action__icontains=search_query) |
+            Q(details__icontains=search_query) |
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(ip_address__icontains=search_query)
+        )
+
+    # Apply user type filter
+    if user_type_filter:
+        logs = logs.filter(user__user_type=user_type_filter)
+
+    # Apply action filter
+    if action_filter:
+        logs = logs.filter(action__icontains=action_filter)
+
+    # Apply date range filters
+    if date_from:
+        logs = logs.filter(timestamp__date__gte=date_from)
+    if date_to:
+        logs = logs.filter(timestamp__date__lte=date_to)
+
+    # Order by most recent
+    logs = logs.order_by('-timestamp')
+
+    # Get distinct actions for the filter dropdown
+    distinct_actions = ActivityLog.objects.values_list('action', flat=True).distinct().order_by('action')
+
+    # Pagination
+    paginator = Paginator(logs, 15)  # 50 logs per page
+    page_number = request.GET.get('page')
+    logs = paginator.get_page(page_number)
+
+    log_activity(
+        user=request.user,
+        action="Viewed Activity Logs",
+        details=f"Admin viewed activity logs.",
+        request=request
+    )
+
+    context = {
+        'logs': logs,
+        'distinct_actions': distinct_actions,
+    }
+
+    return render(request, "admins/activity_logs.html", context)
 
 
 # -----------------------------------------------------------------------------
@@ -3141,6 +3345,7 @@ def handle_paypal_payment(request, order):
 
     return JsonResponse(response_data, status=400)
 
+
 # -----------------------------------------------------------------------------
 # INVOICES & DOCUMENTS
 # -----------------------------------------------------------------------------
@@ -3308,7 +3513,6 @@ def vendor_reports_view(request):
     }
 
     return render(request, "vendor/vendor_reports.html", context)
-
 
 
 @login_required

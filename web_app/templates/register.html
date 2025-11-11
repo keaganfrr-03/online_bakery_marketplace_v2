@@ -46,6 +46,7 @@
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 <div class="form-row">
                     <div class="form-group flex-half">
                         <label for="{{ form.cell.id_for_label }}">{{ form.cell.label }}</label>
@@ -70,8 +71,17 @@
                         {% if form.user_type.errors %}
                             <small style="color: #dc2626;">{{ form.user_type.errors.0 }}</small>
                         {% endif %}
+=======
+                <!-- Cell Number - Commented out for future use -->
+                {% comment %}
+                <div class="form-group">
+                    <label for="{{ form.cell.id_for_label }}">{{ form.cell.label }}</label>
+                    <div class="input-icon">
+                        {{ form.cell|add_class:"form-control"|attr:"placeholder:Enter Mobile Number" }}
+>>>>>>> b6098247f84421a93c995853583f0ef60ada4b97
                     </div>
                 </div>
+                {% endcomment %}
 
                 <div class="form-row">
                     <div class="form-group flex-half">

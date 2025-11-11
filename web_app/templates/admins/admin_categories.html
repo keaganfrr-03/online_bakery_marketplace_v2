@@ -18,6 +18,20 @@
         </a>
     </div>
 
+    <!-- Search Bar -->
+    <div class="mb-4">
+        <form method="get" class="row g-3">
+            <div class="col-md-10">
+                <input type="text" name="search" class="form-control" placeholder="Search categories..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-admin-primary w-100">
+                    <i class="bi bi-search me-2"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+
     <div class="admin-table">
         {% if categories %}
         <table class="table table-hover mb-0">
@@ -25,6 +39,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Category Name</th>
+                    <th>Image</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -32,7 +47,14 @@
                 {% for category in categories %}
                 <tr>
                     <td>{{ category.id }}</td>
-                    <td>{{ category.name }}</td>
+                    <td><strong>{{ category.name }}</strong></td>
+                    <td>
+                        {% if category.image %}
+                            <img src="{{ category.image.url }}" alt="{{ category.name }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">
+                        {% else %}
+                            <div style="width: 40px; height: 40px; background: #e0e0e0; border-radius: 6px;"></div>
+                        {% endif %}
+                    </td>
                     <td>
                         <div class="admin-action-icons">
                             <a href="{% url 'admin_category_edit' category.id %}" class="btn-edit" title="Edit Category">
@@ -48,10 +70,37 @@
             </tbody>
         </table>
 
+        <!-- Pagination -->
+        {% if categories.has_other_pages %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if categories.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categories.previous_page_number }}&search={{ request.GET.search }}">Previous</a>
+                </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">Page {{ categories.number }} of {{ categories.paginator.num_pages }}</span>
+                </li>
+
+                {% if categories.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ categories.next_page_number }}&search={{ request.GET.search }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
         {% else %}
         <div class="admin-alert info">
             <i class="bi bi-info-circle"></i>
-            No categories found. Add a new category to get started.
+            {% if request.GET.search %}
+                No categories found matching "{{ request.GET.search }}".
+            {% else %}
+                No categories found. Add a new category to get started.
+            {% endif %}
         </div>
         {% endif %}
     </div>

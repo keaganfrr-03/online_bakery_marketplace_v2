@@ -64,8 +64,13 @@
                             <a class="nav-link position-relative" href="{% url 'cart' %}">
                                 <i class="bi bi-cart"></i> Cart
                                 {% if cart_item_count and cart_item_count > 0 %}
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                         {{ cart_item_count }}
+                                        <span class="visually-hidden">items in cart</span>
+                                    </span>
+                                {% else %}
+                                    <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                                        0
                                         <span class="visually-hidden">items in cart</span>
                                     </span>
                                 {% endif %}
