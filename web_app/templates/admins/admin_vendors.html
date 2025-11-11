@@ -10,6 +10,27 @@
     <p>View and manage all registered vendors</p>
 </div>
 
+<!-- Filter/Search -->
+<div class="admin-chart-container mb-4">
+    <form method="get" class="row g-3">
+        <div class="col-md-6">
+            <input type="text" name="search" class="form-control" placeholder="Search vendors..." value="{{ request.GET.search }}">
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if request.GET.status == "inactive" %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-admin-primary w-100">
+                <i class="bi bi-funnel me-2"></i>Filter
+            </button>
+        </div>
+    </form>
+</div>
+
 <div class="admin-table">
     <table class="table table-hover mb-0">
         <thead>
@@ -61,5 +82,28 @@
         </tbody>
     </table>
 </div>
+
+<!-- Pagination -->
+{% if vendors.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if vendors.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ vendors.previous_page_number }}&search={{ request.GET.search }}&status={{ request.GET.status }}">Previous</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link">{{ vendors.number }}</span>
+        </li>
+
+        {% if vendors.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ vendors.next_page_number }}&search={{ request.GET.search }}&status={{ request.GET.status }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 
 {% endblock %}

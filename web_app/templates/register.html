@@ -51,7 +51,8 @@
                     </div>
                 </div>
 
-                <!-- Cell -->
+                <!-- Cell Number - Commented out for future use -->
+                {% comment %}
                 <div class="form-group">
                     <label for="{{ form.cell.id_for_label }}">{{ form.cell.label }}</label>
                     <div class="input-icon">
@@ -61,6 +62,7 @@
                         <small style="color: #dc2626;">{{ form.cell.errors.0 }}</small>
                     {% endif %}
                 </div>
+                {% endcomment %}
 
                 <!-- User Type -->
                 <div class="form-group">

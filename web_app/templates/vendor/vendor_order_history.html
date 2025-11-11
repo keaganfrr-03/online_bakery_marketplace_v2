@@ -5,6 +5,87 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/vendor.css' %}">
+<style>
+    .filter-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .filter-row {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+        flex-wrap: wrap;
+    }
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    .filter-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #333;
+        font-size: 14px;
+    }
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+    }
+    .btn-filter {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+    .btn-filter:hover {
+        background: #0056b3;
+    }
+    .btn-clear {
+        padding: 10px 20px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+    .btn-clear:hover {
+        background: #545b62;
+    }
+    .active-filters {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+    .filter-tag {
+        display: inline-block;
+        background: #e7f3ff;
+        color: #0066cc;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+    .filter-tag i {
+        margin-left: 6px;
+        cursor: pointer;
+    }
+</style>
 {% endblock %}
 
 {% block vendor_content %}
@@ -16,6 +97,85 @@
 
 <div class="row justify-content-center">
     <div class="col-12">
+
+        <!-- Filter Card -->
+        <div class="filter-card">
+            <form method="get" action="{% url 'vendor_order_history' %}">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="customer">
+                            <i class="bi bi-person me-1"></i>Customer
+                        </label>
+                        <input
+                            type="text"
+                            id="customer"
+                            name="customer"
+                            placeholder="Search by name or username"
+                            value="{{ customer_filter }}"
+                        >
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="order_number">
+                            <i class="bi bi-hash me-1"></i>Order Number
+                        </label>
+                        <input
+                            type="text"
+                            id="order_number"
+                            name="order_number"
+                            placeholder="Search by order ID"
+                            value="{{ order_number_filter }}"
+                        >
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="status">
+                            <i class="bi bi-info-circle me-1"></i>Status
+                        </label>
+                        <select id="status" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>Paid</option>
+                            <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-actions">
+                        <button type="submit" class="btn-filter">
+                            <i class="bi bi-funnel me-1"></i>Filter
+                        </button>
+                        <a href="{% url 'vendor_order_history' %}" class="btn-clear">
+                            <i class="bi bi-x-circle me-1"></i>Clear
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Active Filters Display -->
+                {% if customer_filter or order_number_filter or status_filter %}
+                <div class="active-filters">
+                    <strong>Active Filters:</strong>
+                    {% if customer_filter %}
+                    <span class="filter-tag">
+                        Customer: {{ customer_filter }}
+                        <i class="bi bi-x" onclick="removeFilter('customer')"></i>
+                    </span>
+                    {% endif %}
+                    {% if order_number_filter %}
+                    <span class="filter-tag">
+                        Order #: {{ order_number_filter }}
+                        <i class="bi bi-x" onclick="removeFilter('order_number')"></i>
+                    </span>
+                    {% endif %}
+                    {% if status_filter %}
+                    <span class="filter-tag">
+                        Status: {{ status_filter|title }}
+                        <i class="bi bi-x" onclick="removeFilter('status')"></i>
+                    </span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </form>
+        </div>
+
         <div class="profile-card">
 
             {% if orders %}
@@ -28,7 +188,7 @@
                             </div>
                             <div class="stat-content">
                                 <h6>Total Orders</h6>
-                                <p class="stat-value">{{ orders|length }}</p>
+                                <p class="stat-value">{{ orders.paginator.count }}</p>
                             </div>
                         </div>
                     </div>
@@ -119,13 +279,13 @@
                     </table>
                 </div>
 
-                <!-- Pagination (if needed) -->
+                <!-- Pagination -->
                 {% if orders.has_other_pages %}
                 <nav aria-label="Order history pagination" class="mt-4">
                     <ul class="pagination justify-content-center">
                         {% if orders.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ orders.previous_page_number }}">
+                            <a class="page-link" href="?page={{ orders.previous_page_number }}{% if customer_filter %}&customer={{ customer_filter }}{% endif %}{% if order_number_filter %}&order_number={{ order_number_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
                                 <i class="bi bi-chevron-left"></i> Previous
                             </a>
                         </li>
@@ -133,13 +293,13 @@
 
                         {% for num in orders.paginator.page_range %}
                         <li class="page-item {% if orders.number == num %}active{% endif %}">
-                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            <a class="page-link" href="?page={{ num }}{% if customer_filter %}&customer={{ customer_filter }}{% endif %}{% if order_number_filter %}&order_number={{ order_number_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
                         </li>
                         {% endfor %}
 
                         {% if orders.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ orders.next_page_number }}">
+                            <a class="page-link" href="?page={{ orders.next_page_number }}{% if customer_filter %}&customer={{ customer_filter }}{% endif %}{% if order_number_filter %}&order_number={{ order_number_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
                                 Next <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
@@ -152,14 +312,28 @@
                 <!-- Empty State -->
                 <div class="empty-state">
                     <i class="bi bi-inbox"></i>
-                    <h4>No Order History</h4>
-                    <p>You don't have any completed, paid, or cancelled orders yet. Your order history will appear here.</p>
-                    <a href="{% url 'vendor_orders' %}" class="btn-browse">View Active Orders</a>
+                    {% if customer_filter or order_number_filter or status_filter %}
+                        <h4>No Orders Found</h4>
+                        <p>No orders match your current filters. Try adjusting your search criteria.</p>
+                        <a href="{% url 'vendor_order_history' %}" class="btn-browse">Clear Filters</a>
+                    {% else %}
+                        <h4>No Order History</h4>
+                        <p>You don't have any completed, paid, or cancelled orders yet. Your order history will appear here.</p>
+                        <a href="{% url 'vendor_orders' %}" class="btn-browse">View Active Orders</a>
+                    {% endif %}
                 </div>
             {% endif %}
 
         </div>
     </div>
 </div>
+
+<script>
+function removeFilter(filterName) {
+    const url = new URL(window.location);
+    url.searchParams.delete(filterName);
+    window.location.href = url.toString();
+}
+</script>
 
 {% endblock %}

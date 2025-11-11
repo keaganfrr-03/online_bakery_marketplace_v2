@@ -431,15 +431,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateCartBadge() {
         fetch("{% url 'cart' %}", {
             method: 'POST',
-            headers: {'X-CSRFToken': csrfToken},
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
             body: new URLSearchParams({'get_cart_count': '1'})
         })
         .then(res => res.json())
         .then(data => {
             if(cartBadge && data.cart_count !== undefined){
                 cartBadge.textContent = data.cart_count;
+                // If cart is empty, show 0 or hide badge
+                if(data.cart_count === 0) {
+                    cartBadge.textContent = '0';
+                }
             }
-        });
+        })
+        .catch(err => console.error('Error updating cart badge:', err));
     }
 
     rows.forEach(row => {
@@ -457,20 +465,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
             fetch("{% url 'cart' %}", {
                 method: 'POST',
-                headers: {'X-CSRFToken': csrfToken},
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
                 body: new URLSearchParams({
                     'product_id': row.dataset.productId,
                     'quantity': qty,
                     'action': 'update'
                 })
-            }).then(() => updateCartBadge());
+            }).then(() => {
+                // Update cart badge after successful update
+                updateCartBadge();
+            });
         });
 
         // Handle remove button
         removeBtn.addEventListener('click', () => {
             fetch("{% url 'cart' %}", {
                 method: 'POST',
-                headers: {'X-CSRFToken': csrfToken},
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
                 body: new URLSearchParams({
                     'product_id': row.dataset.productId,
                     'quantity': 0,
@@ -479,7 +496,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }).then(() => {
                 row.remove();
                 recalcTotal();
+                // Update cart badge after removal
                 updateCartBadge();
+
+                // If no items left, reload page to show empty cart message
+                const remainingItems = document.querySelectorAll('.cart-item[data-product-id]');
+                if(remainingItems.length === 0) {
+                    window.location.reload();
+                }
             });
         });
     });

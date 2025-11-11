@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     showSnackbar(data.message, 'success');
 
-                    // ✅ Update cart badge instead of reloading page
+                    // ✅ Update cart badge using the proper method
                     updateCartBadge(data.cart_count);
                 }
             })
@@ -134,26 +134,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateCartBadge(count) {
-        // Find the cart link and badge
-        const cartLink = document.querySelector('a[href*="cart"]');
-        if (!cartLink) return;
+        // Use the cart-badge ID we set up in base.html
+        const badge = document.getElementById('cart-badge');
 
-        let badge = cartLink.querySelector('.badge.bg-danger');
+        if (badge) {
+            badge.textContent = count;
 
-        if (count > 0) {
-            if (badge) {
-                // Update existing badge
-                badge.textContent = count;
+            // Show or hide badge based on count
+            if (count > 0) {
+                badge.style.display = 'inline-block';
             } else {
-                // Create new badge if it doesn't exist
-                badge = document.createElement('span');
-                badge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
-                badge.innerHTML = count + '<span class="visually-hidden">items in cart</span>';
-                cartLink.appendChild(badge);
+                badge.style.display = 'none';
             }
-        } else {
-            // Remove badge if count is 0
-            if (badge) badge.remove();
         }
     }
 });
